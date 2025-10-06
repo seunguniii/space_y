@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
+from std_msgs.msg import String
 from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
@@ -45,7 +46,8 @@ class MarkerRecognition(Node):
         os.environ.setdefault("GST_DEBUG", "2")
 
         # ROS 파라미터 선언
-        self.declare_parameter("camera_source", "0")
+        self.declare_parameter("camera_source", 0)
+        self.declare_parameter("airframe", "standard_vtol")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
         self.declare_parameter("camera_fps", 30)
@@ -56,12 +58,16 @@ class MarkerRecognition(Node):
         self.declare_parameter("lidar_rate_hz", 10)
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
-        self.declare_parameter("show_window", True)
+        self.declare_parameter("show_window", False)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
 
         # 파라미터 값 읽기
-        src_param = str(self.get_parameter("camera_source").value)
+        if int(self.get_parameter("camera_source").value) == 1:
+           src_param = "udpsrc port=5600 ! application/x-rtp, encoding-name=H264 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink"
+        #src_param = str(self.get_parameter("camera_source").value)
+
+        airframe_ = str(self.get_parameter("airframe").value)
         width = int(self.get_parameter("camera_width").value)
         height = int(self.get_parameter("camera_height").value)
         fps = int(self.get_parameter("camera_fps").value)
@@ -75,8 +81,9 @@ class MarkerRecognition(Node):
         self._show_window = bool(self.get_parameter("show_window").value)
         self._use_filter = bool(self.get_parameter("use_filter").value)
         self._alpha = float(self.get_parameter("lidar_alpha").value)
-        self._filtered_z: Optional[float] = None
 
+        self._filtered_z: Optional[float] = None
+        mission_mode = "flight"
         self._altitude = 0.0
 
         # 카메라 열기
@@ -116,19 +123,26 @@ class MarkerRecognition(Node):
             VehicleOdometry,
             "/fmu/out/vehicle_odometry",
             self._odom_cb,
-            10
+            qos_profile=rclpy.qos.QoSProfile(reliability=rclpy.qos.ReliabilityPolicy.BEST_EFFORT, history=rclpy.qos.HistoryPolicy.KEEP_LAST, depth=10)
         )
         self._roll = 0.0
         self._pitch = 0.0
 
+        self._mission_sub = self.create_subscription(
+            String,
+            "mission_mode",
+            self._mission_cb,
+            10
+        )
+
         self._lidar_sub = self.create_subscription(
             PointCloud2,
             #"/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
-            "/world/aruco/model/standard_vtol_0/link/lidar_sensor_link/sensor/lidar/scan/points",
+            "/world/aruco/model/" + airframe_ + "_0/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
-        self._altitude = 0.0
+        #self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
 
         # 퍼블리셔
         self._bridge = CvBridge()
@@ -139,9 +153,16 @@ class MarkerRecognition(Node):
 
         self._camera_timer = self.create_timer(1.0 / cam_rate, self._camera_timer_cb)
 
+    def _mission_cb(self, msg: String) -> None:
+       mission_mode = msg.data
+       if mission_mode == "LANDING":
+          self._show_window = True
+       else:
+          self._show_window = False
+
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
-        self.get_logger().info("Odomotery called")
+        #self.get_logger().info("Odomotery called")
         w, x, y, z = msg.q
         # Roll
         sinr_cosp = 2.0 * (w * x + y * z)
