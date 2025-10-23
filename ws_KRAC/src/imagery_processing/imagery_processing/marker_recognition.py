@@ -138,7 +138,7 @@ class MarkerRecognition(Node):
         self._lidar_sub = self.create_subscription(
             PointCloud2,
             #"/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
-            "/world/aruco/model/" + airframe_ + "_0/link/lidar_sensor_link/sensor/lidar/scan/points",
+            "/world/aruco_windy/model/" + airframe_ + "_0/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
