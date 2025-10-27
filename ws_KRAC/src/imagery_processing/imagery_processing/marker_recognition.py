@@ -25,12 +25,11 @@ def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) 
         "video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink"
     )
 
-
 class MarkerRecognition(Node):
     _ARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
     try:
         _ARUCO_PARAMS = cv2.aruco.DetectorParameters()
-    except AttributeError:  # OpenCV 버전 호환
+    except AttributeError:
         _ARUCO_PARAMS = cv2.aruco.DetectorParameters_create()
 
     _CAMERA_MATRIX = np.array(
@@ -45,9 +44,9 @@ class MarkerRecognition(Node):
 
         os.environ.setdefault("GST_DEBUG", "2")
 
-        # ROS 파라미터 선언
         self.declare_parameter("camera_source", 0)
         self.declare_parameter("airframe", "standard_vtol")
+        self.declare_parameter("world", "default")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
         self.declare_parameter("camera_fps", 30)
@@ -62,12 +61,11 @@ class MarkerRecognition(Node):
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
 
-        # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
            src_param = "udpsrc port=5600 ! application/x-rtp, encoding-name=H264 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink"
-        #src_param = str(self.get_parameter("camera_source").value)
 
         airframe_ = str(self.get_parameter("airframe").value)
+        world_ = str(self.get_parameter("world").value)
         width = int(self.get_parameter("camera_width").value)
         height = int(self.get_parameter("camera_height").value)
         fps = int(self.get_parameter("camera_fps").value)
@@ -86,11 +84,9 @@ class MarkerRecognition(Node):
         mission_mode = "flight"
         self._altitude = 0.0
 
-        # 카메라 열기
         self._cap = None
 
         if src_param.startswith("udp://") or src_param.endswith(".mp4"):
-            # Use GStreamer pipeline for UDP stream or video file
             pipeline = (
                 f"udpsrc port=5600 ! application/x-rtp, encoding-name=H264 ! "
                 f"rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink"
@@ -118,7 +114,6 @@ class MarkerRecognition(Node):
             self.get_logger().error("Unable to open camera")
             raise RuntimeError("Camera open failed")
 
-        # 오도메트리 구독 (쿼터니언 -> roll/pitch)
         self._odom_sub = self.create_subscription(
             VehicleOdometry,
             "/fmu/out/vehicle_odometry",
@@ -137,18 +132,16 @@ class MarkerRecognition(Node):
 
         self._lidar_sub = self.create_subscription(
             PointCloud2,
-            #"/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
-            "/world/aruco_windy/model/" + airframe_ + "_0/link/lidar_sensor_link/sensor/lidar/scan/points",
+            
+            "/world/" + world_ + "/model/" + airframe_ + "_0/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
-        #self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
 
-        # 퍼블리셔
         self._bridge = CvBridge()
         self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
         if self._publish_debug:
-            from sensor_msgs.msg import Image  # Import here to avoid circular dependency if unused
+            from sensor_msgs.msg import Image
             self._pub_img = self.create_publisher(Image, "/landing/video", 10)
 
         self._camera_timer = self.create_timer(1.0 / cam_rate, self._camera_timer_cb)
@@ -160,15 +153,12 @@ class MarkerRecognition(Node):
        else:
           self._show_window = False
 
-    # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
         #self.get_logger().info("Odomotery called")
         w, x, y, z = msg.q
-        # Roll
         sinr_cosp = 2.0 * (w * x + y * z)
         cosr_cosp = 1.0 - 2.0 * (x * x + y * y)
         roll = math.atan2(sinr_cosp, cosr_cosp)
-        # Pitch
         sinp = 2.0 * (w * y - z * x)
         if abs(sinp) >= 1:
             pitch = math.copysign(math.pi / 2.0, sinp)
@@ -180,13 +170,11 @@ class MarkerRecognition(Node):
         self._have_attitude = True
 
     def _lidar_cb(self, msg: PointCloud2) ->None:
-        #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0] #- 0.17701
+        self._altitude = struct.unpack('<f', first_four)[0]
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
-    # 카메라 프레임 처리
     def _camera_timer_cb(self) -> None:
         ret, frame = self._cap.read()
         if not ret:
@@ -197,7 +185,6 @@ class MarkerRecognition(Node):
         if tag_centre is not None:
             cx, cy = tag_centre
 
-            # ★ 픽셀 → 미터 변환 (카메라 내부 파라미터 사용)
             fx = self._CAMERA_MATRIX[0, 0]
             fy = self._CAMERA_MATRIX[1, 1]
 
@@ -208,10 +195,8 @@ class MarkerRecognition(Node):
             dx = cx - cx0
             dy = cy0 - cy
 
-            # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
             x_m = dx/500
             y_m = dy/500
-
 
             if self._publish_debug:
                 cv2.drawMarker(
@@ -258,7 +243,6 @@ class MarkerRecognition(Node):
 
     def _detect_first_tag(self, frame: np.ndarray) -> Optional[Tuple[float, float]]:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # 왜곡 계수와 카메라 행렬 적용
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
             self._ARUCO_DICT,
@@ -272,7 +256,6 @@ class MarkerRecognition(Node):
         cx = float(np.mean(pts[:, 0]))
         cy = float(np.mean(pts[:, 1]))
         return cx, cy
-
 
 def main(args=None):
     rclpy.init(args=args)
