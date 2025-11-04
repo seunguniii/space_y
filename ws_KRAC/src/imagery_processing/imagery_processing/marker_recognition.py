@@ -16,7 +16,6 @@ from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
 from sensor_msgs.msg import PointCloud2
-from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
