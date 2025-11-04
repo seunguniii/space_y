@@ -90,7 +90,7 @@ class MarkerRecognition(Node):
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
-        self._altitude = 3.0
+        self._altitude = 0.0
 
         # 카메라 열기
         self._cap = None
