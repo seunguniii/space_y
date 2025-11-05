@@ -156,7 +156,7 @@ class Flight : public rclcpp::Node {
 		void transition(FlightMode mode);
 		void publish_trajectory_setpoint();
 		void land();
-		void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0);
+		void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0, float param3 = 0.0, float param4 = 0.0);
 
 		void publish_vehicle_command(int command, float value);
 
@@ -173,6 +173,8 @@ class Flight : public rclcpp::Node {
 		float start_x = 0.0f;
 		float start_y = 0.0f;
 		float start_z = 0.0f;
+
+        float nan = numeric_limits<float>::quiet_NaN();
 
 		int start_mode_ = 0;
 		int land_mode_ = 0;
@@ -247,6 +249,7 @@ void Flight::publish_trajectory_setpoint() {
 						if(start_mode_ == 1 || wp_idx_ >= waypoints_.size()) {
 							mission_mode_ = LANDING;
 							RCLCPP_INFO(this->get_logger(), "[LANDING] Initiating landing sequence");
+							publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_CONFIGURE, 1, 1);
 							return;
 						}
 
@@ -281,6 +284,7 @@ void Flight::land() {
 	TrajectorySetpoint msg {};
 
 	Eigen::Quaternionf q(curr_odom_.q[0], curr_odom_.q[1], curr_odom_.q[2], curr_odom_.q[3]);
+	publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, -90.0, 0.0, nan, nan);
 	q.normalize();
 
 	Eigen::Vector3f targetFRD (0, 0, 0);
@@ -319,10 +323,12 @@ void Flight::land() {
 	trajectory_setpoint_publisher_->publish(msg);
 }
 
-void Flight::publish_vehicle_command(uint16_t command, float param1, float param2) {
+void Flight::publish_vehicle_command(uint16_t command, float param1, float param2, float param3, float param4) {
 	VehicleCommand msg {};
 	msg.param1 = param1;
 	msg.param2 = param2;
+	msg.param3 = param3;
+	msg.param4 = param4;
 	msg.command = command;
 	msg.target_system = 1;
 	msg.target_component = 1;
