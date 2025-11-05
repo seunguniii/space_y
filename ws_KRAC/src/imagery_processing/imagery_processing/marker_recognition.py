@@ -16,6 +16,7 @@ from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
 from sensor_msgs.msg import PointCloud2
+from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
@@ -90,7 +91,7 @@ class MarkerRecognition(Node):
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
-        self._altitude = 0.0
+        self._altitude = 3.0
 
         # 카메라 열기
         self._cap = None
@@ -143,7 +144,7 @@ class MarkerRecognition(Node):
 
         self._lidar_sub = self.create_subscription(
             PointCloud2,
-            "/world/" + world_ + "/model/" + airframe_ + "/link/lidar_sensor_link/sensor/lidar/scan/points",
+            "/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
