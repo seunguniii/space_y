@@ -271,6 +271,8 @@ void LandingTest::land() {
   /***gimbal should point backwards if the message is delivered***/
   //Eigen::Quaternionf desired_q_(0, 0, 0, 1);
   //publish_gimbal_set_attitude(desired_q_, nan, nan, nan);
+  //TODO : topic needs to work for roll control but doesn't work.
+
 
   q.normalize();
   Eigen::Vector3f targetFRD (0, 0, 0);
