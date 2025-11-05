@@ -14,8 +14,6 @@
 #include "px4_msgs/msg/vehicle_odometry.hpp"
 #include "px4_msgs/msg/vehicle_land_detected.hpp"
 #include "px4_msgs/msg/trajectory_setpoint.hpp"
-#include "px4_msgs/msg/gimbal_manager_set_attitude.hpp"
-#include "px4_msgs/msg/gimbal_device_set_attitude.hpp"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -55,7 +53,6 @@ class LandingTest : public rclcpp::Node {
       offboard_control_mode_publisher_ = this->create_publisher<OffboardControlMode>("/fmu/in/offboard_control_mode", 10);
       trajectory_setpoint_publisher_ = this->create_publisher<TrajectorySetpoint>("/fmu/in/trajectory_setpoint", 10);
       vehicle_command_publisher_ = this->create_publisher<VehicleCommand>("/fmu/in/vehicle_command", 10);
-      gimbal_set_attitude_publisher_ = this->create_publisher<GimbalDeviceSetAttitude>("fmu/out/gimbal_device_set_attitude", 10);
       mission_mode_publisher_ = this->create_publisher<std_msgs::msg::String>("/mission_mode", 10);
 
       auto timer_callback = [this]() -> void {
@@ -112,7 +109,6 @@ class LandingTest : public rclcpp::Node {
     rclcpp::Publisher<OffboardControlMode>::SharedPtr offboard_control_mode_publisher_;
     rclcpp::Publisher<TrajectorySetpoint>::SharedPtr trajectory_setpoint_publisher_;
     rclcpp::Publisher<VehicleCommand>::SharedPtr vehicle_command_publisher_;
-    rclcpp::Publisher<GimbalDeviceSetAttitude>::SharedPtr gimbal_set_attitude_publisher_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mission_mode_publisher_;
 
     rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr odom_sub_;
@@ -148,7 +144,6 @@ class LandingTest : public rclcpp::Node {
     void publish_trajectory_setpoint();
     void land();
     void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0, float param3 = 0.0, float param4 = 0.0, float param5 = 0.0);
-    void publish_gimbal_set_attitude(Eigen::Quaternionf q, float avx = 0.0, float avy = 0.0, float avz = 0.0);
 
     int offboard_setpoint_counter_ = 0;
 
@@ -234,49 +229,13 @@ void LandingTest::land() {
   TrajectorySetpoint msg {};
 
   Eigen::Quaternionf q(curr_odom_.q[0], curr_odom_.q[1], curr_odom_.q[2], curr_odom_.q[3]);
-  //Eigen::Matrix3f R = q.toRotationMatrix();
-  /*
-  double yaw = std::atan2(R(1, 0), R(0, 0));
-  double pitch = -M_PI/2.0 - std::asin(-R(2, 0));
-
-  float desired_yaw_ = yaw*rad_to_deg;//std::fmod((-yaw*rad_to_deg + 540.0), 360.0) - 180.0;
-  float desired_pitch_ = pitch*rad_to_deg;
-  */
-  /*
-  Eigen::Vector3f down_world(0, 0, -1);
-  Eigen::Vector3f camera_x = q.conjugate()*down_world;
-  Eigen::Matrix3f r = q.toRotationMatrix();
-  float vehicle_pitch = asin(-r(-2, 0));
-  Eigen::Vector3f top_desired(cos(vehicle_pitch), -sin(vehicle_pitch), 0.0f);
-  */
-  //camera_x.normalize();
-  //Eigen::Vector3f camera_y = camera_x.cross(top_desired).normalized();
-  //Eigen::Vector3f camera_z = camera_x.cross(camera_y).normalized();
-  /*
-  float horizon = sqrt(camera_x.x()*camera_x.x() + camera_x.y()*camera_x.y());
-  float desired_pitch_ = atan2(-camera_x.z(), horizon);
-  float desired_yaw_ = atan2(camera_x.y(), camera_x.x());
-  */
-  //float desired_yaw_ = std::atan2(down_body.y(), down_body.x())*rad_to_deg;
-  //float desired_pitch_ = -std::atan2(down_body.z(), std::sqrt(down_body.x()*down_body.x() + down_body.y()*down_body.y()))*rad_to_deg;
-
-  //publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, desired_pitch_, desired_yaw_, nan, nan);
-  //publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, -90.0, 0.0, nan, nan);
-  Eigen::Quaternionf desired_q_(0, 0, 0, 1);
-  publish_gimbal_set_attitude(desired_q_, nan, nan, nan);
+  publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, -90.0, 0.0, nan, nan);
 
   q.normalize();
   Eigen::Vector3f targetFRD (0, 0, 0);
-  //acc_alt_ = curr_odom_.position[2];
   iter_ratio_ = (land_mode_ == 0? log10f(descent_step_*100)*0.1:descent_step_*0.15*-acc_alt_);
   float l = -acc_alt_*iter_ratio_;
   if(desired_x_ != 0 || desired_y_ != 0) targetFRD = {desired_y_*l, desired_x_*l, 0};
-
-  /*
-  float r = sqrt(targetFRD.x()*targetFRD.x() + targetFRD.y()*targetFRD.y());
-  float theta = asin(targetFRD.y()/r);
-  targetFRD = {r*cos(theta+desired_yaw_), r*sin(theta+desired_yaw_), 0};
-  */
 
   switch(land_mode_) {
     default:
@@ -306,22 +265,6 @@ void LandingTest::land() {
 
   msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
   trajectory_setpoint_publisher_->publish(msg);
-}
-
-void LandingTest::publish_gimbal_set_attitude(Eigen::Quaternionf q, float ang_vel_x, float ang_vel_y, float ang_vel_z) {
-  GimbalDeviceSetAttitude msg;
-  msg.q = {q.w(), q.x(), q.y(), q.z()};
-  msg.angular_velocity_x = ang_vel_x;
-  msg.angular_velocity_y = ang_vel_y;
-  msg.angular_velocity_z = ang_vel_z;
-  msg.flags = 0;
-  //msg.origin_sysid = 1;
-  //msg.origin_compid = 1;
-  msg.target_system = 1;
-  msg.target_component = 1;
-  //msg.gimbal_device_id = 154;
-  msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
-  gimbal_set_attitude_publisher_->publish(msg);
 }
 
 void LandingTest::publish_vehicle_command(uint16_t command, float param1, float param2, float param3, float param4, float param5) {
