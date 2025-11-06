@@ -38,9 +38,10 @@ class LandingTest : public rclcpp::Node {
              desired_x_ = msg->point.x;
              desired_y_ = msg->point.y;
              acc_alt_ = -msg->point.z;
+             have_alt_  = std::isfinite(acc_alt_); 
       });
 
-      this->declare_parameter<float>("descent_vel_param", 0.0f);
+      this->declare_parameter<float>("descent_vel_param", 0.5f);
 
       offboard_control_mode_publisher_ = this->create_publisher<OffboardControlMode>("/fmu/in/offboard_control_mode", 10);
       trajectory_setpoint_publisher_ = this->create_publisher<TrajectorySetpoint>("/fmu/in/trajectory_setpoint", 10);
@@ -63,9 +64,6 @@ class LandingTest : public rclcpp::Node {
 
         switch (mission_mode_) {
           default:
-          case FLIGHT:
-            publish_trajectory_setpoint();
-            break;
 
           case LANDING:
             land();
@@ -96,7 +94,6 @@ class LandingTest : public rclcpp::Node {
     px4_msgs::msg::VehicleOdometry curr_odom_;
 
     enum Mission {
-      FLIGHT,
       LANDING,
       FINISHED,
     };
@@ -104,6 +101,7 @@ class LandingTest : public rclcpp::Node {
     bool has_odom_ = false;
     bool armed_ = false;
     bool landed_ = false;
+    bool have_alt_ = false;
 
     int hold_counter_ = 0;
     int HOLD_THRESHOLD = 20;
@@ -128,7 +126,7 @@ class LandingTest : public rclcpp::Node {
     float descent_vel_ = 0.0f;
     float iter_ratio_ = 0.2f;
 
-    Mission mission_mode_ = FLIGHT;
+    Mission mission_mode_ = LANDING;
 };
 
 void LandingTest::arm() {
@@ -186,6 +184,15 @@ void LandingTest::publish_trajectory_setpoint() {
 }
 
 void LandingTest::land() {
+  if (!has_odom_) {
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Waiting for odometry...");
+    return;
+  }
+  if (!have_alt_) {
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Waiting for /landing/coordinates (alt)...");
+    return;
+  }
+  
   TrajectorySetpoint msg {};
   Eigen::Quaternionf q(curr_odom_.q[0], curr_odom_.q[1], curr_odom_.q[2], curr_odom_.q[3]);
   q.normalize();
