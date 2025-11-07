@@ -64,6 +64,7 @@ MicroXRCEAgent udp4 -p 8888
 
 ```bash
 source /opt/ros/humble/setup.bash
+cd PX4-Autopilot
 PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down
 ```
 > ✅ `aruco` 월드 내 `x500_lidar_down` 드론이 스폰됨
