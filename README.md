@@ -28,12 +28,12 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    ```bash
    export GZ_VERSION=harmonic
    ```
-8. **ws_sensor_combined workspace 설치 및 빌드**  
-   🔗 https://docs.px4.io/main/en/ros2/user_guide 참조
+8. **px4_msgs workspace 설치 및 빌드**  
+   🔗 개발환경 구축방법 <3-5. (선택사항) px4_msgs workspace 구축하기> 참조
 9. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
 
 > 💡 **필요한 워크스페이스 3개**
-> - `ws_sensor_combined`
+> - `px4_ros_ws`
 > - `ros-gz-bridge`
 > - `ws_KRAC`  
 > 이 3개가 모두 있어야 Autoland 모듈이 정상적으로 작동합니다.
