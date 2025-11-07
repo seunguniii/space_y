@@ -78,13 +78,6 @@ source /opt/ros/humble/setup.bash
 source ~/rosgz/install/setup.bash
 ros2 run ros_gz_bridge parameter_bridge /world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked
 ```
-> Gazebo → ROS 토픽 변환을 위한 기본 브릿지
-
----
-
-source /opt/ros/humble/setup.bash
-
-```
 > ✅ LiDAR 데이터를 Gazebo → ROS로 전달
 
 ---
