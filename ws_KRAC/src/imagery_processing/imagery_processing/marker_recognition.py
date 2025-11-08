@@ -16,7 +16,6 @@ from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
 from sensor_msgs.msg import PointCloud2
-from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
@@ -62,6 +61,7 @@ class MarkerRecognition(Node):
         self.declare_parameter("show_window", True)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
+        self.declare_parameter("world","aruco_windy")
         self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
 
         # 파라미터 값 읽기
@@ -90,6 +90,8 @@ class MarkerRecognition(Node):
         self._use_filter = bool(self.get_parameter("use_filter").value)
         self._alpha = float(self.get_parameter("lidar_alpha").value)
         self._lidar_altitude = float(self.get_parameter("lidar_altitude").value)
+        world_=str(self.get_parameter("world").value)
+
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
         self._altitude = 0.0
@@ -145,7 +147,7 @@ class MarkerRecognition(Node):
 
         self._lidar_sub = self.create_subscription(
             PointCloud2,
-            "/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
+            "/world/" + world_ + "/model/" + airframe_ + "/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
@@ -191,7 +193,7 @@ class MarkerRecognition(Node):
         #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0]-self._lidar_altitude
+        self._altitude = struct.unpack('<f', first_four)[0] - self._lidar_altitude
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
@@ -217,7 +219,7 @@ class MarkerRecognition(Node):
             dy = cy0 - cy
 
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            x_m = dx/500 #고쳐야 할 코드 500이 아니라 보정 식 제대로 써서.
+            x_m = dx/500
             y_m = dy/500
 
 
@@ -238,6 +240,8 @@ class MarkerRecognition(Node):
                     markerSize=10,
                     thickness=1,
                 )
+        else:
+            x_m, y_m = 0.0, 0.0
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
