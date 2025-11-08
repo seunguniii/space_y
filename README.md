@@ -22,15 +22,16 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    print(cv2.getBuildInformation())
    ```
    ✅ `GStreamer: YES` 확인 필수
-7. **ros-gz-bridge 설치 (from source)**  
+7. **gazebo Harmonic 설치, ros-gz-bridge 설치 (from source)**  
+   https://gazebosim.org/docs/harmonic/install_ubuntu/ -> 가제보 하모닉 버전 먼저 설치!
    🔗 https://github.com/gazebosim/ros_gz/tree/humble  
    ⚠️ 설치 전 아래 명령 꼭 실행  
    ```bash
    export GZ_VERSION=harmonic
    ```
-8. **px4_msgs workspace 설치 및 빌드**  
+9. **px4_msgs workspace 설치 및 빌드**  
    🔗 개발환경 구축방법 <3-5. (선택사항) px4_msgs workspace 구축하기> 참조
-9. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
+10. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
 
 > 💡 **필요한 워크스페이스 3개**
 > - `px4_ros_ws`
@@ -88,7 +89,7 @@ ros2 run ros_gz_bridge parameter_bridge /world/aruco/model/x500_lidar_down_0/lin
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/ws_sensor_combined/install/setup.bash
+source ~/px4_ros_ws/install/setup.bash
 source ~/space_y/ws_KRAC/install/setup.bash
 ros2 launch launch_package autoland.launch.py
 ```
