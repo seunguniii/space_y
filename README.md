@@ -116,7 +116,7 @@ ros2 launch launch_package autoland.launch.py
 
 | 순서 | 항목 | 명령어 요약 |
 |:--:|:--|:--|
-| 1 | QGroundControl 실행 | `./QGroundControl.AppImage` |
+| 1 | QGroundControl 실행
 | 2 | XRCE Agent 실행 | `MicroXRCEAgent udp4 -p 8888` |
 | 3 | PX4 SITL 스폰 | `PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down` |
 | 4 | Gazebo ↔ ROS Bridge | `source ~/rosgz/install/setup.bash` |
