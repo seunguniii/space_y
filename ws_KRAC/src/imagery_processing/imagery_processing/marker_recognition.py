@@ -48,7 +48,7 @@ class MarkerRecognition(Node):
 
         # ROS 파라미터 선언
         self.declare_parameter("camera_source", "1")
-        self.declare_parameter("airframe", "x500_lidar_down")
+        self.declare_parameter("airframe", "x500_lidar_down_0")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
         self.declare_parameter("camera_fps", 30)
@@ -62,6 +62,7 @@ class MarkerRecognition(Node):
         self.declare_parameter("show_window", True)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
+        self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
 
         # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
@@ -88,10 +89,10 @@ class MarkerRecognition(Node):
         self._show_window = bool(self.get_parameter("show_window").value)
         self._use_filter = bool(self.get_parameter("use_filter").value)
         self._alpha = float(self.get_parameter("lidar_alpha").value)
-
+        self._lidar_altitude = float(self.get_parameter("lidar_altitude").value)
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
-        self._altitude = 3.0
+        self._altitude = 0.0
 
         # 카메라 열기
         self._cap = None
@@ -190,7 +191,7 @@ class MarkerRecognition(Node):
         #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0]
+        self._altitude = struct.unpack('<f', first_four)[0]-self._lidar_altitude
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
@@ -216,7 +217,7 @@ class MarkerRecognition(Node):
             dy = cy0 - cy
 
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            x_m = dx/500
+            x_m = dx/500 #고쳐야 할 코드 500이 아니라 보정 식 제대로 써서.
             y_m = dy/500
 
 
@@ -237,8 +238,6 @@ class MarkerRecognition(Node):
                     markerSize=10,
                     thickness=1,
                 )
-        else:
-            x_m, y_m = 0.0, 0.0
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -269,8 +268,7 @@ class MarkerRecognition(Node):
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
             self._ARUCO_DICT,
-            parameters=self._ARUCO_PARAMS,cameraMatrix=self._CAMERA_MATRIX,
-            distCoeff=self._DIST_COEFFS)
+            parameters=self._ARUCO_PARAMS)
         if ids is None or len(ids) == 0:
             return None
         pts = corners[0].reshape(4, 2)
