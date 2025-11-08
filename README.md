@@ -45,9 +45,7 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
 > ⚠️ 각 단계는 **별도의 터미널에서 개별 실행**해야 합니다.
 
 ### **1️⃣ QGroundControl 실행**
-```bash
-./QGroundControl.AppImage
-```
+
 > PX4 상태 모니터링 및 수동 이륙 제어용 GUI
 
 ---
