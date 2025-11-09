@@ -159,7 +159,6 @@ class LandingTest : public rclcpp::Node {
 
     int start_mode_ = 0;
     int land_mode_ = 0;
-    FlightMode flight_mode_ = MULTIROTOR;
     Mission mission_mode_ = FLIGHT;
 };
 
