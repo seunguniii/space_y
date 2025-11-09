@@ -19,9 +19,9 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace px4_msgs::msg;
 
-class LandingTest : public rclcpp::Node {
+class Flight : public rclcpp::Node {
 	public:
-		LandingTest() : Node("landing") {
+		Flight() : Node("flight") {
 			odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
 			[this](const px4_msgs::msg::VehicleOdometry::SharedPtr msg) {
 				curr_odom_ = *msg;
@@ -124,11 +124,6 @@ class LandingTest : public rclcpp::Node {
 		    FINISHED,
 		};
 
-		enum FlightMode {
-		    MULTIROTOR = 3,
-		    FIXED_WING = 4,
-		};
-
 		bool has_odom_ = false;
 		bool armed_ = false;
 		bool landed_ = false;
@@ -153,10 +148,9 @@ class LandingTest : public rclcpp::Node {
 		void disarm();
 
 		void publish_offboard_control_mode();
-		void transition(FlightMode mode);
 		void publish_trajectory_setpoint();
 		void land();
-		void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0);
+		void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0, float param3 = 0.0, float param4 = 0.0);
 
 		void publish_vehicle_command(int command, float value);
 
@@ -174,41 +168,32 @@ class LandingTest : public rclcpp::Node {
 		float start_y = 0.0f;
 		float start_z = 0.0f;
 
+		float nan = numeric_limits<float>::quiet_NaN();
+
 		int start_mode_ = 0;
 		int land_mode_ = 0;
 		FlightMode flight_mode_ = MULTIROTOR;
 		Mission mission_mode_ = FLIGHT;
 };
 
-void LandingTest::arm() {
+void Flight::arm() {
 	publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0);
 
 	RCLCPP_INFO(this->get_logger(), "Arm command send");
 	armed_ = true;
 }
 
-void LandingTest::disarm() {
+void Flight::disarm() {
 	publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 0.0);
 
 	RCLCPP_INFO(this->get_logger(), "Disarm command send");
 	armed_ = false;
 }
 
-void LandingTest::transition(LandingTest::FlightMode mode) {
-	if (mode == flight_mode_) return;
-
-	publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_VTOL_TRANSITION, static_cast<float>(mode));
-	flight_mode_ = mode;
-	RCLCPP_INFO(this->get_logger(), "[Transition] Transitioning from flight mode %s to %s.",
-	            flight_mode_ == FIXED_WING? "MULTIROTOR":"FIXED_WING",
-	            flight_mode_ == MULTIROTOR? "MULTIROTOR":"FIXED_WING");
-}
-
-void LandingTest::publish_offboard_control_mode() {
+void Flight::publish_offboard_control_mode() {
 	OffboardControlMode msg {};
 	msg.position = mission_mode_ == LANDING && land_mode_ == 1? false:true;
-	msg.velocity = flight_mode_ == FIXED_WING ||
-	               (mission_mode_ == LANDING && land_mode_ == 1)? true:false;
+	msg.velocity = mission_mode_ == LANDING && land_mode_ == 1? true:false;
 	msg.acceleration = false;
 	msg.attitude = false;
 	msg.body_rate = false;
@@ -216,7 +201,7 @@ void LandingTest::publish_offboard_control_mode() {
 	offboard_control_mode_publisher_->publish(msg);
 }
 
-void LandingTest::publish_trajectory_setpoint() {
+void Flight::publish_trajectory_setpoint() {
 	if(curr_odom_.timestamp == 0) {
 		RCLCPP_WARN(this->get_logger(), "Waiting for odometry...");
 		return;
@@ -233,45 +218,20 @@ void LandingTest::publish_trajectory_setpoint() {
 	if(start_mode_ < 2) target << start_x, start_y, start_z;
 
 	if(armed_) {
-		switch(flight_mode_) {
-			default:
-			case MULTIROTOR:
-				msg.position = {wp[0], wp[1], wp[2]};
+		msg.position = {wp[0], wp[1], wp[2]};
+		
+		if(dist < 3.0f) {
+			hold_counter_++;
+			if(hold_counter_ > HOLD_THRESHOLD) {
+				hold_counter_ = 0;
+				wp_idx_++;
 
-				if(dist < 3.0f) {
-					hold_counter_++;
-					if(hold_counter_ > HOLD_THRESHOLD) {
-						hold_counter_ = 0;
-						wp_idx_++;
-
-						if(start_mode_ == 1 || wp_idx_ >= waypoints_.size()) {
-							mission_mode_ = LANDING;
-							RCLCPP_INFO(this->get_logger(), "[LANDING] Initiating landing sequence");
-							return;
-						}
-
-						RCLCPP_INFO(this->get_logger(), "[MULTIROTOR] Reached waypoint %ld. Heading waypoint %ld.", wp_idx_-1, wp_idx_);
-						transition(FIXED_WING);
-					}
+				if(start_mode_ == 1 || wp_idx_ >= waypoints_.size()) {
+					mission_mode_ = LANDING;
+					RCLCPP_INFO(this->get_logger(), "[LANDING] Initiating landing sequence");
+					return;
 				}
-				break;
-
-			case FIXED_WING:
-				msg.position = {wp[0], wp[1], wp[2]};
-				msg.velocity = {k*dir.x(), k*dir.y(), 0.0f};
-
-				if(dist < 10.0f) {
-					wp_idx_++;
-					RCLCPP_INFO(this->get_logger(), "[FIXED_WING] Reached waypoint %ld. Heading waypoint %ld.", wp_idx_-1, wp_idx_);
-				}
-
-				if(wp_idx_ >= waypoints_.size()) {
-					transition(MULTIROTOR);
-					wp_idx_--;
-					//mission_mode_ = LANDING;
-					//RCLCPP_INFO(this->get_logger(), "[LANDING] Initiating landing sequence");
-					hold_counter_= 0;
-				}
+			}
 		}
 	}
 
@@ -279,7 +239,7 @@ void LandingTest::publish_trajectory_setpoint() {
 	trajectory_setpoint_publisher_->publish(msg);
 }
 
-void LandingTest::land() {
+void Flight::land() {
 	TrajectorySetpoint msg {};
 
 	Eigen::Quaternionf q(curr_odom_.q[0], curr_odom_.q[1], curr_odom_.q[2], curr_odom_.q[3]);
@@ -295,9 +255,6 @@ void LandingTest::land() {
 		case 0: {//position based landing
 			Eigen::Vector3f current(curr_odom_.position[0], curr_odom_.position[1], acc_alt_);
 			Eigen::Vector3f targetNED = current + q*targetFRD;
-
-			//if(desired_x_ == 0 && desired_y_ == 0)
-			//targetNED = {waypoints_[waypoints_.size() - 1][0], waypoints_[waypoints_.size() - 1][1], acc_alt_ + descent_step_};
 
 			msg.position= {targetNED[0], targetNED[1], acc_alt_ + descent_step_};
 			break;
@@ -324,10 +281,12 @@ void LandingTest::land() {
 	trajectory_setpoint_publisher_->publish(msg);
 }
 
-void LandingTest::publish_vehicle_command(uint16_t command, float param1, float param2) {
+void Flight::publish_vehicle_command(uint16_t command, float param1, float param2, float param3, float param4) {
 	VehicleCommand msg {};
 	msg.param1 = param1;
 	msg.param2 = param2;
+	msg.param3 = param3;
+	msg.param4 = param4;
 	msg.command = command;
 	msg.target_system = 1;
 	msg.target_component = 1;
@@ -337,10 +296,10 @@ void LandingTest::publish_vehicle_command(uint16_t command, float param1, float 
 }
 
 int main(int argc, char *argv[]) {
-	std::cout << "Starting landing test" << std::endl;
+	std::cout << "Starting flight" << std::endl;
 	setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<LandingTest>());
+	rclcpp::spin(std::make_shared<Flight>());
 
 	rclcpp::shutdown();
 	return 0;
