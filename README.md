@@ -22,18 +22,19 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    print(cv2.getBuildInformation())
    ```
    ✅ `GStreamer: YES` 확인 필수
-7. **ros-gz-bridge 설치 (from source)**  
+7. **gazebo Harmonic 설치, ros-gz-bridge 설치 (from source)**  
+   가제보 하모닉은 PX4 설치(3번)시 같이 설치됨
    🔗 https://github.com/gazebosim/ros_gz/tree/humble  
    ⚠️ 설치 전 아래 명령 꼭 실행  
    ```bash
    export GZ_VERSION=harmonic
    ```
-8. **ws_sensor_combined workspace 설치 및 빌드**  
-   🔗 https://docs.px4.io/main/en/ros2/user_guide 참조
-9. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
+9. **px4_msgs workspace 설치 및 빌드**  
+   🔗 개발환경 구축방법 <3-5. (선택사항) px4_msgs workspace 구축하기> 참조
+10. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
 
 > 💡 **필요한 워크스페이스 3개**
-> - `ws_sensor_combined`
+> - `px4_ros_ws`
 > - `ros-gz-bridge`
 > - `ws_KRAC`  
 > 이 3개가 모두 있어야 Autoland 모듈이 정상적으로 작동합니다.
@@ -44,9 +45,7 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
 > ⚠️ 각 단계는 **별도의 터미널에서 개별 실행**해야 합니다.
 
 ### **1️⃣ QGroundControl 실행**
-```bash
-./QGroundControl.AppImage
-```
+
 > PX4 상태 모니터링 및 수동 이륙 제어용 GUI
 
 ---
@@ -64,26 +63,18 @@ MicroXRCEAgent udp4 -p 8888
 
 ```bash
 source /opt/ros/humble/setup.bash
+cd PX4-Autopilot
 PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down
 ```
 > ✅ `aruco` 월드 내 `x500_lidar_down` 드론이 스폰됨
 
 ---
 
-### **4️⃣ Gazebo ↔ ROS2 Bridge 실행**
+### **4️⃣ Gazebo ↔ ROS2 Bridge 실행, LiDAR PointCloud 브릿지 실행**
 
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/rosgz/install/setup.bash
-```
-> Gazebo → ROS 토픽 변환을 위한 기본 브릿지
-
----
-
-### **5️⃣ LiDAR PointCloud 브릿지 실행**
-
-```bash
-source /opt/ros/humble/setup.bash
 ros2 run ros_gz_bridge parameter_bridge /world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked
 ```
 > ✅ LiDAR 데이터를 Gazebo → ROS로 전달
@@ -96,7 +87,7 @@ ros2 run ros_gz_bridge parameter_bridge /world/aruco/model/x500_lidar_down_0/lin
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/ws_sensor_combined/install/setup.bash
+source ~/px4_ros_ws/install/setup.bash
 source ~/space_y/ws_KRAC/install/setup.bash
 ros2 launch launch_package autoland.launch.py
 ```
@@ -123,7 +114,7 @@ ros2 launch launch_package autoland.launch.py
 
 | 순서 | 항목 | 명령어 요약 |
 |:--:|:--|:--|
-| 1 | QGroundControl 실행 | `./QGroundControl.AppImage` |
+| 1 | QGroundControl 실행
 | 2 | XRCE Agent 실행 | `MicroXRCEAgent udp4 -p 8888` |
 | 3 | PX4 SITL 스폰 | `PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down` |
 | 4 | Gazebo ↔ ROS Bridge | `source ~/rosgz/install/setup.bash` |
