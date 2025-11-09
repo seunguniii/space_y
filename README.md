@@ -23,7 +23,7 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    ```
    ✅ `GStreamer: YES` 확인 필수
 7. **gazebo Harmonic 설치, ros-gz-bridge 설치 (from source)**  
-   https://gazebosim.org/docs/harmonic/install_ubuntu/ -> 가제보 하모닉 버전 먼저 설치!
+   가제보 하모닉은 PX4 설치(3번)시 같이 설치됨
    🔗 https://github.com/gazebosim/ros_gz/tree/humble  
    ⚠️ 설치 전 아래 명령 꼭 실행  
    ```bash
