@@ -168,11 +168,10 @@ class Flight : public rclcpp::Node {
 		float start_y = 0.0f;
 		float start_z = 0.0f;
 
-		float nan = numeric_limits<float>::quiet_NaN();
+		float nan = std::numeric_limits<float>::quiet_NaN();
 
 		int start_mode_ = 0;
 		int land_mode_ = 0;
-		FlightMode flight_mode_ = MULTIROTOR;
 		Mission mission_mode_ = FLIGHT;
 };
 
