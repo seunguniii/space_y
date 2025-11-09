@@ -16,7 +16,6 @@ from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
 from sensor_msgs.msg import PointCloud2
-from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
@@ -48,7 +47,7 @@ class MarkerRecognition(Node):
 
         # ROS 파라미터 선언
         self.declare_parameter("camera_source", "1")
-        self.declare_parameter("airframe", "x500_lidar_down")
+        self.declare_parameter("airframe", "x500_lidar_down_0")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
         self.declare_parameter("camera_fps", 30)
@@ -62,6 +61,8 @@ class MarkerRecognition(Node):
         self.declare_parameter("show_window", True)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
+        self.declare_parameter("world","aruco_windy")
+        self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
 
         # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
@@ -88,10 +89,12 @@ class MarkerRecognition(Node):
         self._show_window = bool(self.get_parameter("show_window").value)
         self._use_filter = bool(self.get_parameter("use_filter").value)
         self._alpha = float(self.get_parameter("lidar_alpha").value)
+        self._lidar_altitude = float(self.get_parameter("lidar_altitude").value)
+        world_=str(self.get_parameter("world").value)
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
-        self._altitude = 3.0
+        self._altitude = 0.0
 
         # 카메라 열기
         self._cap = None
@@ -144,7 +147,7 @@ class MarkerRecognition(Node):
 
         self._lidar_sub = self.create_subscription(
             PointCloud2,
-            "/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
+            "/world/" + world_ + "/model/" + airframe_ + "/link/lidar_sensor_link/sensor/lidar/scan/points",
             self._lidar_cb,
             10
         )
@@ -190,7 +193,7 @@ class MarkerRecognition(Node):
         #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0]
+        self._altitude = struct.unpack('<f', first_four)[0]*np.cos(self._pitch)*np.cos(self._roll) - self._lidar_altitude
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
@@ -269,8 +272,7 @@ class MarkerRecognition(Node):
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
             self._ARUCO_DICT,
-            parameters=self._ARUCO_PARAMS,cameraMatrix=self._CAMERA_MATRIX,
-            distCoeff=self._DIST_COEFFS)
+            parameters=self._ARUCO_PARAMS)
         if ids is None or len(ids) == 0:
             return None
         pts = corners[0].reshape(4, 2)
