@@ -22,13 +22,13 @@ using namespace px4_msgs::msg;
 class Flight : public rclcpp::Node {
 	public:
 		Flight() : Node("flight") {
-			odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
+			odom_sub_ = this->create_subscription<VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
 			[this](const px4_msgs::msg::VehicleOdometry::SharedPtr msg) {
 				curr_odom_ = *msg;
 				has_odom_ = true;
 			});
 
-			landed_sub_ = this->create_subscription<px4_msgs::msg::VehicleLandDetected>("/fmu/out/vehicle_land_detected", rclcpp::SensorDataQoS(),
+			landed_sub_ = this->create_subscription<VehicleLandDetected>("/fmu/out/vehicle_land_detected", rclcpp::SensorDataQoS(),
 			[this](const px4_msgs::msg::VehicleLandDetected::SharedPtr msg) {
 				landed_ = msg->landed;
 			});
@@ -174,7 +174,7 @@ class Flight : public rclcpp::Node {
 		float start_y = 0.0f;
 		float start_z = 0.0f;
 
-		float nan = numeric_limits<float>::quiet_NaN();
+		float nan = std::numeric_limits<float>::quiet_NaN();
 
 		int start_mode_ = 0;
 		int land_mode_ = 0;
@@ -314,7 +314,7 @@ void Flight::land() {
 	}
 
 	if(acc_alt_ > low_enough_) {
-		publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND);
+		publish_vehicle_command(VehicleCommand::VEHICLE_CMD_NAV_LAND);
 		RCLCPP_INFO(this->get_logger(), "[Landing] Low enough at altitude %.3f. Sending land command.", -acc_alt_);
 		mission_mode_ = FINISHED;
 	}
@@ -329,9 +329,10 @@ void Flight::publish_vehicle_command(uint16_t command, float param1, float param
 	msg.param2 = param2;
 	msg.param3 = param3;
 	msg.param4 = param4;
-	msg.command = command;
+	msg.source_system = 1;
+	msg.source_component = 1;
 	msg.target_system = 1;
-	msg.target_component = 1;
+	msg.command = command;
 	msg.from_external = true;
 	msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
 	vehicle_command_publisher_->publish(msg);
