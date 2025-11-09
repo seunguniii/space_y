@@ -213,7 +213,6 @@ void Flight::publish_trajectory_setpoint() {
 	Eigen::Vector3f target(wp[0], wp[1], wp[2]);
 	Eigen::Vector3f to_wp = target - current;
 	float dist = to_wp.norm();
-	Eigen::Vector3f dir = to_wp/dist;
 	if(start_mode_ < 2) target << start_x, start_y, start_z;
 
 	if(armed_) {
