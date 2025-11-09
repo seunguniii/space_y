@@ -87,7 +87,7 @@ class MarkerRecognition(Node):
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
         self._altitude = 3.0
-        src_param = build_gst_pipeline(width,height,fps,flip_method:int=0)
+        src_param = build_gst_pipeline(width,height,fps,0) #need further review
 
 
         # 카메라 열기
