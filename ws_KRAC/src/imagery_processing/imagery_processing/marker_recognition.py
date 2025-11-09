@@ -20,10 +20,15 @@ from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
-        f"nvarguscamerasrc sensor-id=0 ! "
+        "nvarguscamerasrc sensor-id=0 ! "
         f"video/x-raw(memory:NVMM),width={width},height={height},format=NV12,framerate={fps}/1 ! "
+        "queue leaky=downstream max-size-buffers=1 ! "
         f"nvvidconv flip-method={flip_method} ! "
-        "video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink"
+        "video/x-raw,format=BGRx ! "
+        "videoconvert ! "
+        "video/x-raw,format=BGR ! "
+        "queue leaky=downstream max-size-buffers=1 ! "
+        "appsink drop=true max-buffers=1 sync=false"
     )
 
 
@@ -47,7 +52,6 @@ class MarkerRecognition(Node):
         os.environ.setdefault("GST_DEBUG", "2")
 
         # ROS 파라미터 선언
-        self.declare_parameter("camera_source", "1")
         self.declare_parameter("airframe", "x500_lidar_down")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
@@ -59,20 +63,11 @@ class MarkerRecognition(Node):
         self.declare_parameter("lidar_rate_hz", 10)
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
-        self.declare_parameter("show_window", True)
+        self.declare_parameter("show_window", False)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
 
         # 파라미터 값 읽기
-        if int(self.get_parameter("camera_source").value) == 1:
-            src_param = (
-    'udpsrc port=5600 caps="application/x-rtp,media=video,encoding-name=H264,'
-    'payload=96,clock-rate=90000" ! '
-    'rtpjitterbuffer latency=0 ! queue ! rtph264depay ! h264parse ! avdec_h264 ! '
-    'videoconvert ! video/x-raw,format=BGR ! '
-    'appsink sync=false max-buffers=1 drop=true'
-)       
-        #src_param = str(self.get_parameter("camera_source").value)
 
         airframe_ = str(self.get_parameter("airframe").value)
         width = int(self.get_parameter("camera_width").value)
@@ -92,34 +87,15 @@ class MarkerRecognition(Node):
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
         self._altitude = 3.0
+        src_param = build_gst_pipeline(width,height,fps,flip_method:int=0)
+
 
         # 카메라 열기
         self._cap = None
-
-        if src_param.startswith("udp://") or src_param.endswith(".mp4"):
-            # Use GStreamer pipeline for UDP stream or video file
-            pipeline = (
-                f"udpsrc port=5600 ! application/x-rtp, encoding-name=H264 ! "
-                f"rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink"
-            )
-            self.get_logger().info(f"Opening UDP stream pipeline:\n{pipeline}")
-            cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
-            if cap.isOpened():
+        self.get_logger().info(f"Trying to open as GStreamer pipeline:\n{src_param}")
+        cap = cv2.VideoCapture(src_param, cv2.CAP_GSTREAMER)
+        if cap.isOpened():
                 self._cap = cap
-            else:
-                self.get_logger().error("Failed to open UDP video stream")
-        else:
-            try:
-                idx = int(src_param)
-                self.get_logger().info(f"Opening V4L2 index {idx}")
-                cap = cv2.VideoCapture(idx)
-                if cap.isOpened():
-                    self._cap = cap
-            except ValueError:
-                self.get_logger().info(f"Trying to open as GStreamer pipeline:\n{src_param}")
-                cap = cv2.VideoCapture(src_param, cv2.CAP_GSTREAMER)
-                if cap.isOpened():
-                    self._cap = cap
 
         if self._cap is None or not self._cap.isOpened():
             self.get_logger().error("Unable to open camera")
@@ -142,13 +118,12 @@ class MarkerRecognition(Node):
             10
         )
 
-        self._lidar_sub = self.create_subscription(
-            PointCloud2,
-            "/world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points",
-            self._lidar_cb,
-            10
-        )
-        #self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
+        #self._lidar_sub = self.create_subscription(
+        #    PointCloud2,
+        #    lidar 받는 주소),
+        #    self._lidar_cb,
+        #    10
+        #) -> 라이다 i2c 연결일듯
 
         # 퍼블리셔
         self._bridge = CvBridge()
@@ -250,12 +225,6 @@ class MarkerRecognition(Node):
 
         if self._publish_debug:
             self._publish_image(frame)
-
-        if self._show_window:
-            cv2.imshow("landing/video", frame)
-            if cv2.waitKey(1) & 0xFF == 27:
-                self.get_logger().info("ESC pressed - shutting down")
-                rclpy.shutdown()
 
     def _publish_image(self, frame: np.ndarray) -> None:
         img_msg = self._bridge.cv2_to_imgmsg(frame, encoding="bgr8")
