@@ -1,3 +1,9 @@
+//OBJECTIVE//
+//figure out the correct usage of gimbal_manager_set_attitude
+
+//PURPOSE//
+//control pitch, yaw, roll of a gimbal via quaternion to stabilize camera frame during landing, etc.
+
 #include <iostream>
 #include <cmath>
 #include <chrono>
