@@ -120,5 +120,5 @@ ros2 launch launch_package autoland.launch.py
 | 4 | Gazebo ↔ ROS Bridge | `source ~/rosgz/install/setup.bash` |
 | 5 | LiDAR 브릿지 | `ros2 run ros_gz_bridge parameter_bridge ...` |
 | 6 | Autoland 실행 | `ros2 launch launch_package autoland.launch.py` |
-
+히
 ---
