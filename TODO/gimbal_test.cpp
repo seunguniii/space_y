@@ -1,3 +1,12 @@
+//CAUSE//
+//gimbal_manager_set_attitude isn't built into the module
+
+//TODO//
+//add gimbal_manager_set_attitude to yaml file
+//verify afterwards
+//refer below link
+//https://docs.px4.io/main/en/middleware/dds_topics
+
 //OBJECTIVE//
 //figure out the correct usage of gimbal_manager_set_attitude
 
