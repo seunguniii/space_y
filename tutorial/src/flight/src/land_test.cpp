@@ -22,13 +22,13 @@ using namespace px4_msgs::msg;
 class LandingTest : public rclcpp::Node {
   public:
     LandingTest() : Node("landing") {
-      odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
+      odom_sub_ = this->create_subscription<VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
       [this](const VehicleOdometry::SharedPtr msg) {
         curr_odom_ = *msg;
         has_odom_ = true;
       });
 
-      landed_sub_ = this->create_subscription<px4_msgs::msg::VehicleLandDetected>("/fmu/out/vehicle_land_detected", rclcpp::SensorDataQoS(),
+      landed_sub_ = this->create_subscription<VehicleLandDetected>("/fmu/out/vehicle_land_detected", rclcpp::SensorDataQoS(),
       [this](const VehicleLandDetected::SharedPtr msg) {
         landed_ = msg->landed;
       });
@@ -115,7 +115,7 @@ class LandingTest : public rclcpp::Node {
     rclcpp::Subscription<VehicleLandDetected>::SharedPtr landed_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr desired_setpoint_sub_;
 
-    px4_msgs::msg::VehicleOdometry curr_odom_;
+    VehicleOdometry curr_odom_;
 
     enum Mission {
         FLIGHT,
