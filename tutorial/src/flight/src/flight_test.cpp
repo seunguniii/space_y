@@ -21,8 +21,8 @@ using namespace px4_msgs::msg;
 class OffboardControl : public rclcpp::Node {
   public:
     OffboardControl() : Node("test") {
-      odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
-                           [this](const px4_msgs::msg::VehicleOdometry::SharedPtr msg) {
+      odom_sub_ = this->create_subscription<VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
+                           [this](const VehicleOdometry::SharedPtr msg) {
                            curr_odom_ = *msg; has_odom_ = true;});
 
       offboard_control_mode_publisher_ = this->create_publisher<OffboardControlMode>("/fmu/in/offboard_control_mode", 10);
@@ -56,7 +56,7 @@ class OffboardControl : public rclcpp::Node {
     rclcpp::Publisher<TrajectorySetpoint>::SharedPtr trajectory_setpoint_publisher_;
     rclcpp::Publisher<VehicleCommand>::SharedPtr vehicle_command_publisher_;
 
-    rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr odom_sub_;
+    rclcpp::Subscription<VehicleOdometry>::SharedPtr odom_sub_;
 
     px4_msgs::msg::VehicleOdometry curr_odom_;
 
