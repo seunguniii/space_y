@@ -23,13 +23,13 @@ class LandingTest : public rclcpp::Node {
   public:
     LandingTest() : Node("landing") {
       odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
-      [this](const px4_msgs::msg::VehicleOdometry::SharedPtr msg) {
+      [this](const VehicleOdometry::SharedPtr msg) {
         curr_odom_ = *msg;
         has_odom_ = true;
       });
 
       landed_sub_ = this->create_subscription<px4_msgs::msg::VehicleLandDetected>("/fmu/out/vehicle_land_detected", rclcpp::SensorDataQoS(),
-      [this](const px4_msgs::msg::VehicleLandDetected::SharedPtr msg) {
+      [this](const VehicleLandDetected::SharedPtr msg) {
         landed_ = msg->landed;
       });
 
@@ -111,8 +111,8 @@ class LandingTest : public rclcpp::Node {
     rclcpp::Publisher<VehicleCommand>::SharedPtr vehicle_command_publisher_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mission_mode_publisher_;
 
-    rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr odom_sub_;
-    rclcpp::Subscription<px4_msgs::msg::VehicleLandDetected>::SharedPtr landed_sub_;
+    rclcpp::Subscription<VehicleOdometry>::SharedPtr odom_sub_;
+    rclcpp::Subscription<VehicleLandDetected>::SharedPtr landed_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr desired_setpoint_sub_;
 
     px4_msgs::msg::VehicleOdometry curr_odom_;
@@ -229,7 +229,7 @@ void LandingTest::land() {
   TrajectorySetpoint msg {};
 
   Eigen::Quaternionf q(curr_odom_.q[0], curr_odom_.q[1], curr_odom_.q[2], curr_odom_.q[3]);
-  publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, -90.0, 0.0, nan, nan);
+  publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW, -90.0, 0.0, nan, nan);
 
   q.normalize();
   Eigen::Vector3f targetFRD (0, 0, 0);
@@ -258,7 +258,7 @@ void LandingTest::land() {
   }
 
   if(acc_alt_ > low_enough_) {
-    publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND);
+    publish_vehicle_command(VehicleCommand::VEHICLE_CMD_NAV_LAND);
     RCLCPP_INFO(this->get_logger(), "[LANDING] Low enough at altitude %.3f. Sending land command.", -acc_alt_);
     mission_mode_ = FINISHED;
   }
