@@ -10,27 +10,31 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
 1. **Ubuntu 22.04 설치**
 2. **ROS2 Humble 설치**  
    🔗 https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html
-3. **PX4 main branch 설치**  
-   🔗 https://docs.px4.io/main/en/dev_setup/dev_env_linux_ubuntu
-4. **Micro XRCE-DDS Agent 설치**  
+3. **PX4 main branch 설치**
+   ```bash
+   $ git clone https://github.com/PX4/PX4-Autopilot.git
+   $ cd PX4-Autopilot
+   $ git checkout v1.16.0
+   $ make submodules clean
+   $ make px4_sitl
+   ```
+5. **Micro XRCE-DDS Agent 설치**  
    🔗 https://docs.px4.io/main/en/middleware/uxrce_dds
-5. **QGroundControl 설치**  
+6. **QGroundControl 설치**  
    🔗 https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html
-6. **OpenCV 4.5.4에 GStreamer 설치 여부 확인 (중요)**  
+7. **OpenCV 4.5.4에 GStreamer 설치 여부 확인 (중요)**  
    ```python
    import cv2
    print(cv2.getBuildInformation())
    ```
    ✅ `GStreamer: YES` 확인 필수
-7. **gazebo Harmonic 설치, ros-gz-bridge 설치 (from source)**  
+8. **gazebo Harmonic 설치, ros-gz-bridge 설치 (from source)**  
    가제보 하모닉은 PX4 설치(3번)시 같이 설치됨
-   🔗 https://github.com/gazebosim/ros_gz/tree/humble  
-   ⚠️ 설치 전 아래 명령 꼭 실행  
    ```bash
-   export GZ_VERSION=harmonic
+   $ sudo apt install ros-humble-ros-gzharmonic
    ```
 9. **px4_msgs workspace 설치 및 빌드**  
-   🔗 개발환경 구축방법 <3-5. (선택사항) px4_msgs workspace 구축하기> 참조
+   🔗 개발환경 구축방법 <3-5. px4_msgs workspace 구축하기> 참조
 10. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서(v1.0.1)** 참고하여 자동착륙 모듈 실행
 
 > 💡 **필요한 워크스페이스 3개**
