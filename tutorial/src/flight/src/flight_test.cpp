@@ -18,11 +18,11 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace px4_msgs::msg;
 
-class OffboardControl : public rclcpp::Node {
+class FlightTest : public rclcpp::Node {
   public:
-    OffboardControl() : Node("test") {
-      odom_sub_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
-                           [this](const px4_msgs::msg::VehicleOdometry::SharedPtr msg) {
+    FlightTest() : Node("FlightTest") {
+      odom_sub_ = this->create_subscription<VehicleOdometry>("/fmu/out/vehicle_odometry", rclcpp::SensorDataQoS(),
+                           [this](const VehicleOdometry::SharedPtr msg) {
                            curr_odom_ = *msg; has_odom_ = true;});
 
       offboard_control_mode_publisher_ = this->create_publisher<OffboardControlMode>("/fmu/in/offboard_control_mode", 10);
@@ -56,9 +56,9 @@ class OffboardControl : public rclcpp::Node {
     rclcpp::Publisher<TrajectorySetpoint>::SharedPtr trajectory_setpoint_publisher_;
     rclcpp::Publisher<VehicleCommand>::SharedPtr vehicle_command_publisher_;
 
-    rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr odom_sub_;
+    rclcpp::Subscription<VehicleOdometry>::SharedPtr odom_sub_;
 
-    px4_msgs::msg::VehicleOdometry curr_odom_;
+    VehicleOdometry curr_odom_;
 
     enum FlightMode {
         MULTIROTOR = 3,
@@ -99,21 +99,21 @@ class OffboardControl : public rclcpp::Node {
     float k = 1;
 };
 
-void OffboardControl::arm() {
+void FlightTest::arm() {
   publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0);
 
   RCLCPP_INFO(this->get_logger(), "Arm command send");
   armed_ = true;
 }
 
-void OffboardControl::disarm() {
+void FlightTest::disarm() {
   publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 0.0);
 
   RCLCPP_INFO(this->get_logger(), "Disarm command send");
   armed_ = false;
 }
 
-void OffboardControl::publish_offboard_control_mode() {
+void FlightTest::publish_offboard_control_mode() {
   OffboardControlMode msg {};
   msg.position = true;
   msg.velocity = flight_mode_ == MULTIROTOR? false:true;
@@ -124,7 +124,7 @@ void OffboardControl::publish_offboard_control_mode() {
   offboard_control_mode_publisher_->publish(msg);
 }
 
-void OffboardControl::publish_trajectory_setpoint() {
+void FlightTest::publish_trajectory_setpoint() {
   if (curr_odom_.timestamp == 0) {
     RCLCPP_WARN(this->get_logger(), "Waiting for odometry...");
     return;
@@ -152,7 +152,7 @@ void OffboardControl::publish_trajectory_setpoint() {
         if(wp_idx_ == 1) transition(FIXED_WING);
         if(wp_idx_ >= waypoints_.size()) {
           RCLCPP_INFO(this->get_logger(), "[LANDING] Sending land command");
-          publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND);
+          publish_vehicle_command(VehicleCommand::VEHICLE_CMD_NAV_LAND);
           flight_mode_ = LANDED;
           disarm();
         }
@@ -178,7 +178,7 @@ void OffboardControl::publish_trajectory_setpoint() {
   trajectory_setpoint_publisher_->publish(msg);
 }
 
-void OffboardControl::publish_vehicle_command(uint16_t command, float param1, float param2) {
+void FlightTest::publish_vehicle_command(uint16_t command, float param1, float param2) {
   VehicleCommand msg {};
   msg.param1 = param1;
   msg.param2 = param2;
@@ -186,13 +186,12 @@ void OffboardControl::publish_vehicle_command(uint16_t command, float param1, fl
   msg.target_system = 1;
   msg.target_component = 1;
   msg.source_system = 1;
-  msg.source_component = 1;
   msg.from_external = true;
   msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
   vehicle_command_publisher_->publish(msg);
 }
 
-void OffboardControl::transition(FlightMode mode) {
+void FlightTest::transition(FlightMode mode) {
   if (mode == flight_mode_) {
     RCLCPP_INFO(this->get_logger(), "[TRANSITION] Already in desired flight mode, no command sent.");
     return;
@@ -208,7 +207,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Starting offboard control node..." << std::endl;
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<OffboardControl>());
+  rclcpp::spin(std::make_shared<FlightTest>());
 
   rclcpp::shutdown();
   return 0;
