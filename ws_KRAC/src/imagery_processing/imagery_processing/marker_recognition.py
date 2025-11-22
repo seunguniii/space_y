@@ -63,6 +63,9 @@ class MarkerRecognition(Node):
         self.declare_parameter("lidar_alpha", 0.3)
         self.declare_parameter("world","aruco_windy")
         self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
+        self.last_x_m=None
+        self.last_y_m=None
+        self.last_z_m=None
 
         # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
@@ -164,10 +167,6 @@ class MarkerRecognition(Node):
 
     def _mission_cb(self, msg: String) -> None:
        mission_mode = msg.data
-       if mission_mode == "LANDING":
-          self._show_window = True
-       else:
-          self._show_window = False
 
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
@@ -193,7 +192,7 @@ class MarkerRecognition(Node):
         #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0]*np.cos(self._pitch)*np.cos(self._roll) - self._lidar_altitude
+        self._altitude = struct.unpack('<f', first_four)[0] - self._lidar_altitude
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
@@ -221,7 +220,8 @@ class MarkerRecognition(Node):
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
             x_m = dx/500
             y_m = dy/500
-
+            self.last_x_m = x_m 
+            self.last_y_m = y_m 
 
             if self._publish_debug:
                 cv2.drawMarker(
@@ -240,8 +240,14 @@ class MarkerRecognition(Node):
                     markerSize=10,
                     thickness=1,
                 )
+
         else:
-            x_m, y_m = 0.0, 0.0
+            if self.last_x_m is None or self.last_y_m is None:
+                return
+            x_m = self.last_x_m
+            y_m = self.last_y_m
+            
+
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
