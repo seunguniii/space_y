@@ -277,8 +277,9 @@ class MarkerRecognition(Node):
         # 왜곡 계수와 카메라 행렬 적용
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
-            self._ARUCO_DICT,
-            parameters=self._ARUCO_PARAMS)
+            self.ARUCO_DICT,
+            parameters=self._ARUCO_PARAMS,cameraMatrix=self._CAMERA_MATRIX,
+            distCoeff=self._DIST_COEFFS)
         if ids is None or len(ids) == 0:
             return None
         pts = corners[0].reshape(4, 2)
