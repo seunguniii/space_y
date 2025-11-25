@@ -191,7 +191,7 @@ class MarkerRecognition(Node):
         #self.get_logger().info("Lidar data called")
         raw = bytes(msg.data)
         first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0] - self._lidar_altitude
+        self._altitude = struct.unpack('<f', first_four)[0]*np.cos(self._pitch)*np.cos(self._roll) - self._lidar_altitude
         self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
