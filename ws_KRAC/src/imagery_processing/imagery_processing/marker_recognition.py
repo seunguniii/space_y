@@ -63,9 +63,8 @@ class MarkerRecognition(Node):
         self.declare_parameter("lidar_alpha", 0.3)
         self.declare_parameter("world","aruco_windy")
         self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
-        self.last_x_m=None
-        self.last_y_m=None
-        self.last_z_m=None
+        self.x_m=0.
+        self.y_m=0.
 
         # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
@@ -218,8 +217,8 @@ class MarkerRecognition(Node):
             dy = cy0 - cy
 
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            x_m = dx/500
-            y_m = dy/500
+            self_x_m = dx/500
+            self_y_m = dy/500
             self.last_x_m = x_m 
             self.last_y_m = y_m 
 
@@ -241,19 +240,14 @@ class MarkerRecognition(Node):
                     thickness=1,
                 )
 
-        else:
-            if self.last_x_m is None or self.last_y_m is None:
-                return
-            x_m = self.last_x_m
-            y_m = self.last_y_m
             
 
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(x_m)
-        msg.point.y = float(y_m)
+        msg.point.x = float(self_x_m)
+        msg.point.y = float(self_y_m)
         msg.point.z = self._altitude
         self._pub_point.publish(msg)
 
