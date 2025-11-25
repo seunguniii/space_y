@@ -63,6 +63,8 @@ class MarkerRecognition(Node):
         self.declare_parameter("lidar_alpha", 0.3)
         self.declare_parameter("world","aruco_windy")
         self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
+        self.x_m=0.
+        self.y_m=0.
 
         # 파라미터 값 읽기
         if int(self.get_parameter("camera_source").value) == 1:
@@ -164,10 +166,6 @@ class MarkerRecognition(Node):
 
     def _mission_cb(self, msg: String) -> None:
        mission_mode = msg.data
-       if mission_mode == "LANDING":
-          self._show_window = True
-       else:
-          self._show_window = False
 
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
@@ -218,10 +216,9 @@ class MarkerRecognition(Node):
             dx = cx - cx0
             dy = cy0 - cy
 
-            # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            x_m = dx/500
-            y_m = dy/500
-
+            # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정. # obsolete comment
+            self.x_m = dx/500
+            self.y_m = dy/500
 
             if self._publish_debug:
                 cv2.drawMarker(
@@ -240,14 +237,15 @@ class MarkerRecognition(Node):
                     markerSize=10,
                     thickness=1,
                 )
-        else:
-            x_m, y_m = 0.0, 0.0
+
+            
+
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(x_m)
-        msg.point.y = float(y_m)
+        msg.point.x = float(self.x_m)
+        msg.point.y = float(self.y_m)
         msg.point.z = self._altitude
         self._pub_point.publish(msg)
 
@@ -271,8 +269,9 @@ class MarkerRecognition(Node):
         # 왜곡 계수와 카메라 행렬 적용
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
-            self._ARUCO_DICT,
-            parameters=self._ARUCO_PARAMS)
+            self.ARUCO_DICT,
+            parameters=self._ARUCO_PARAMS,cameraMatrix=self._CAMERA_MATRIX,
+            distCoeff=self._DIST_COEFFS)
         if ids is None or len(ids) == 0:
             return None
         pts = corners[0].reshape(4, 2)
