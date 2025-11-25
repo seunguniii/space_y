@@ -58,8 +58,6 @@ class MarkerRecognition(Node):
         self.declare_parameter("camera_fps", 30)
         self.declare_parameter("flip_method", 0)
         self.declare_parameter("cam_rate_hz", 30)
-        self.declare_parameter("i2c_bus", 7)
-        self.declare_parameter("i2c_addr", 0x62)
         self.declare_parameter("lidar_rate_hz", 10)
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
@@ -77,18 +75,14 @@ class MarkerRecognition(Node):
         fps = int(self.get_parameter("camera_fps").value)
         flip_method = int(self.get_parameter("flip_method").value)
         cam_rate = float(self.get_parameter("cam_rate_hz").value)
-        bus_id = int(self.get_parameter("i2c_bus").value)
-        self._i2c_addr = int(self.get_parameter("i2c_addr").value)
-        lidar_rate = float(self.get_parameter("lidar_rate_hz").value)
         self._frame_id = str(self.get_parameter("frame_id").value)
         self._publish_debug = bool(self.get_parameter("debug").value)
         self._show_window = bool(self.get_parameter("show_window").value)
         self._use_filter = bool(self.get_parameter("use_filter").value)
-        self._alpha = float(self.get_parameter("lidar_alpha").value)
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
-        self._altitude = 3.0
+        self._altitude = 0.0
         src_param = build_gst_pipeline(width,height,fps,0) #need further review
 
 
@@ -146,6 +140,7 @@ class MarkerRecognition(Node):
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
         #self.get_logger().info("Odomotery called")
+        self._altitude = -msg.position[2]
         w, x, y, z = msg.q
         # Roll
         sinr_cosp = 2.0 * (w * x + y * z)
@@ -162,13 +157,6 @@ class MarkerRecognition(Node):
         self._pitch = pitch
         self._have_attitude = True
 
-
-    def _lidar_cb(self, msg: PointCloud2) ->None:
-        #self.get_logger().info("Lidar data called")
-        raw = bytes(msg.data)
-        first_four = raw[0:4]
-        self._altitude = struct.unpack('<f', first_four)[0]
-        self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
     def _camera_timer_cb(self) -> None:
@@ -214,14 +202,12 @@ class MarkerRecognition(Node):
                     markerSize=10,
                     thickness=1,
                 )
-        else:
-            x_m, y_m = 0.0, 0.0
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(self_x_m)
-        msg.point.y = float(self_y_m)
+        msg.point.x = float(self.x_m)
+        msg.point.y = float(self.y_m)
         msg.point.z = self._altitude
         self._pub_point.publish(msg)
 
