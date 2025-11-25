@@ -244,8 +244,8 @@ class MarkerRecognition(Node):
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(self_x_m)
-        msg.point.y = float(self_y_m)
+        msg.point.x = float(self.x_m)
+        msg.point.y = float(self.y_m)
         msg.point.z = self._altitude
         self._pub_point.publish(msg)
 
