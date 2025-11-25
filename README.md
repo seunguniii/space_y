@@ -68,7 +68,7 @@ MicroXRCEAgent udp4 -p 8888
 ```bash
 source /opt/ros/humble/setup.bash
 cd PX4-Autopilot
-PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down
+PX4_GZ_WORLD=aruco_windy make px4_sitl gz_x500_lidar_down
 ```
 > ✅ `aruco` 월드 내 `x500_lidar_down` 드론이 스폰됨
 
@@ -79,7 +79,7 @@ PX4_GZ_WORLD=aruco make px4_sitl gz_x500_lidar_down
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/rosgz/install/setup.bash
-ros2 run ros_gz_bridge parameter_bridge /world/aruco/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked
+ros2 run ros_gz_bridge parameter_bridge /world/aruco_windy/model/x500_lidar_down_0/link/lidar_sensor_link/sensor/lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked
 ```
 > ✅ LiDAR 데이터를 Gazebo → ROS로 전달
 
