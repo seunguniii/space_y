@@ -42,7 +42,7 @@ class MarkerRecognition(Node):
     _CAMERA_MATRIX = np.array(
         [[827.99145461, 0.0, 249.63373237],
          [0.0, 826.30893069, 260.11920342],
-         [0.0, 0.0, 1.0]]
+         [0.0, 0.0, 1.0]] ## -> 새로운 카메라 오면 꼭 반영하기
     )
     _DIST_COEFFS = np.array([[-0.27436478, 0.31753802, 0.00183457, -0.01212723, 0.05024013]])
 
@@ -66,6 +66,8 @@ class MarkerRecognition(Node):
         self.declare_parameter("show_window", False)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
+        self.x_m = 0.
+        self.y_m = 0.
 
         # 파라미터 값 읽기
 
@@ -191,8 +193,8 @@ class MarkerRecognition(Node):
             dy = cy0 - cy
 
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            x_m = dx/500
-            y_m = dy/500
+            self.x_m = dx/500
+            self.y_m = dy/500
 
 
             if self._publish_debug:
@@ -218,8 +220,8 @@ class MarkerRecognition(Node):
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(x_m)
-        msg.point.y = float(y_m)
+        msg.point.x = float(self_x_m)
+        msg.point.y = float(self_y_m)
         msg.point.z = self._altitude
         self._pub_point.publish(msg)
 
