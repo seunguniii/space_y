@@ -219,8 +219,6 @@ class MarkerRecognition(Node):
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
             self_x_m = dx/500
             self_y_m = dy/500
-            self.last_x_m = x_m 
-            self.last_y_m = y_m 
 
             if self._publish_debug:
                 cv2.drawMarker(
