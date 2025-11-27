@@ -114,12 +114,6 @@ class MarkerRecognition(Node):
             10
         )
 
-        #self._lidar_sub = self.create_subscription(
-        #    PointCloud2,
-        #    lidar 받는 주소),
-        #    self._lidar_cb,
-        #    10
-        #) -> 라이다 i2c 연결일듯
 
         # 퍼블리셔
         self._bridge = CvBridge()
@@ -129,13 +123,6 @@ class MarkerRecognition(Node):
             self._pub_img = self.create_publisher(Image, "/landing/video", 10)
 
         self._camera_timer = self.create_timer(1.0 / cam_rate, self._camera_timer_cb)
-
-    def _mission_cb(self, msg: String) -> None:
-       mission_mode = msg.data
-       if mission_mode == "LANDING":
-          self._show_window = True
-       else:
-          self._show_window = False
 
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
