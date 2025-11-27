@@ -9,7 +9,6 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(px4_msgs REQUIRED)
-find_package(mavros_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
@@ -20,7 +19,7 @@ add_executable(flight src/flight.cpp)
 ament_target_dependencies(flight_test rclcpp px4_msgs geometry_msgs)
 target_include_directories(flight_test PUBLIC ${EIGEN3_INCLUDE_DIRS})
 
-ament_target_dependencies(land_test rclcpp px4_msgs mavros_msgs geometry_msgs)
+ament_target_dependencies(land_test rclcpp px4_msgs geometry_msgs)
 target_include_directories(land_test PUBLIC ${EIGEN3_INCLUDE_DIRS})
 
 ament_target_dependencies(flight rclcpp px4_msgs geometry_msgs)
