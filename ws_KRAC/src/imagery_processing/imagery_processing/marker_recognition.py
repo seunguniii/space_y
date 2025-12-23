@@ -50,33 +50,19 @@ class MarkerRecognition(Node):
         os.environ.setdefault("GST_DEBUG", "2")
 
         # ROS 파라미터 선언
-        self.declare_parameter("airframe", "x500_lidar_down")
-        self.declare_parameter("camera_width", 1280)
-        self.declare_parameter("camera_height", 720)
-        self.declare_parameter("camera_fps", 30)
-        self.declare_parameter("flip_method", 0)
-        self.declare_parameter("cam_rate_hz", 30)
-        self.declare_parameter("lidar_rate_hz", 10)
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
         self.declare_parameter("show_window", False)
         self.declare_parameter("use_filter", True)
-        self.declare_parameter("lidar_alpha", 0.3)
         self.x_m = 0.
         self.y_m = 0.
 
         # 파라미터 값 읽기
 
         airframe_ = str(self.get_parameter("airframe").value)
-        width = int(self.get_parameter("camera_width").value)
-        height = int(self.get_parameter("camera_height").value)
-        fps = int(self.get_parameter("camera_fps").value)
-        flip_method = int(self.get_parameter("flip_method").value)
-        cam_rate = float(self.get_parameter("cam_rate_hz").value)
         self._frame_id = str(self.get_parameter("frame_id").value)
         self._publish_debug = bool(self.get_parameter("debug").value)
         self._show_window = bool(self.get_parameter("show_window").value)
-        self._use_filter = bool(self.get_parameter("use_filter").value)
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
@@ -104,13 +90,6 @@ class MarkerRecognition(Node):
         )
         self._roll = 0.0
         self._pitch = 0.0
-
-        self._mission_sub = self.create_subscription(
-            String,
-            "mission_mode",
-            self._mission_cb,
-            10
-        )
 
 
         # 퍼블리셔
