@@ -171,7 +171,7 @@ class MarkerRecognition(Node):
         msg.header.frame_id = self._frame_id
         msg.point.x = float(self.x_m)
         msg.point.y = float(self.y_m)
-        msg.point.z = self._altitude
+        msg.point.z = float(self._altitude)
         self._pub_point.publish(msg)
 
         if self._publish_debug:
