@@ -56,14 +56,13 @@ class MarkerRecognition(Node):
         self.declare_parameter("use_filter", True)
         self.x_m = 0.
         self.y_m = 0.
+        self.declare_parameter("cam_rate", 30.0)
 
         # 파라미터 값 읽기
-
-        airframe_ = str(self.get_parameter("airframe").value)
         self._frame_id = str(self.get_parameter("frame_id").value)
         self._publish_debug = bool(self.get_parameter("debug").value)
         self._show_window = bool(self.get_parameter("show_window").value)
-
+        self.cam_rate = float(self.get_parameter("cam_rate").value)
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
         self._altitude = 0.0
@@ -138,15 +137,15 @@ class MarkerRecognition(Node):
             fy = self._CAMERA_MATRIX[1, 1]
 
             height, width = frame.shape[:2]
-            cx0 = width/2
-            cy0 = height/2
+            cx0 = self._CAMERA_MATRIX[0,2]
+            cy0 = self._CAMERA_MATRIX[1,2]
 
             dx = cx - cx0
             dy = cy0 - cy
 
             # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
-            self.x_m = dx/500
-            self.y_m = dy/500
+            self.x_m = dx/fx*z
+            self.y_m = dy/fy*z
 
 
             if self._publish_debug:
