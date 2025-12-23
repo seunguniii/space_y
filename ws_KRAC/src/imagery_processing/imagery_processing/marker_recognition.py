@@ -20,16 +20,14 @@ from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
-        "nvarguscamerasrc sensor-id=0 ! "
-        f"video/x-raw(memory:NVMM),width={width},height={height},format=NV12,framerate={fps}/1 ! "
-        "queue leaky=downstream max-size-buffers=1 ! "
-        f"nvvidconv flip-method={flip_method} ! "
-        "video/x-raw,format=BGRx ! "
-        "videoconvert ! "
-        "video/x-raw,format=BGR ! "
-        "queue leaky=downstream max-size-buffers=1 ! "
-        "appsink drop=true max-buffers=1 sync=false"
-    )
+            f"rtspsrc location={'rtsp://192.168.144.25:8554/main.264'} "
+            "protocols=GST_RTSP_LOWER_TRANS_UDP "
+            "latency=50 drop-on-latency=true do-retransmission=false ! "
+            "rtph264depay ! h264parse ! "
+            "avdec_h264 ! "
+            "videoconvert ! video/x-raw,format=BGR ! "
+            "appsink drop=1 max-buffers=1 sync=false"
+        )
 
 
 class MarkerRecognition(Node):
