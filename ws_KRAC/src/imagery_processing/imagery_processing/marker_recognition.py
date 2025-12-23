@@ -16,18 +16,14 @@ from geometry_msgs.msg import PointStamped
 from rclpy.node import Node
 from px4_msgs.msg import VehicleOdometry
 from sensor_msgs.msg import PointCloud2
-from sensor_msgs_py import point_cloud2 as pc2
 
 def build_gst_pipeline(width: int, height: int, fps: int, flip_method: int = 0) -> str:
     return (
-            f"rtspsrc location={'rtsp://192.168.144.25:8554/main.264'} "
-            "protocols=GST_RTSP_LOWER_TRANS_UDP "
-            "latency=50 drop-on-latency=true do-retransmission=false ! "
-            "rtph264depay ! h264parse ! "
-            "avdec_h264 ! "
-            "videoconvert ! video/x-raw,format=BGR ! "
-            "appsink drop=1 max-buffers=1 sync=false"
-        )
+        f"nvarguscamerasrc sensor-id=0 ! "
+        f"video/x-raw(memory:NVMM),width={width},height={height},format=NV12,framerate={fps}/1 ! "
+        f"nvvidconv flip-method={flip_method} ! "
+        "video/x-raw,format=BGRx ! videoconvert ! video/x-raw,format=BGR ! appsink"
+    )
 
 
 class MarkerRecognition(Node):
@@ -40,7 +36,7 @@ class MarkerRecognition(Node):
     _CAMERA_MATRIX = np.array(
         [[827.99145461, 0.0, 249.63373237],
          [0.0, 826.30893069, 260.11920342],
-         [0.0, 0.0, 1.0]] ## -> 새로운 카메라 오면 꼭 반영하기
+         [0.0, 0.0, 1.0]]
     )
     _DIST_COEFFS = np.array([[-0.27436478, 0.31753802, 0.00183457, -0.01212723, 0.05024013]])
 
@@ -50,22 +46,36 @@ class MarkerRecognition(Node):
         os.environ.setdefault("GST_DEBUG", "2")
 
         # ROS 파라미터 선언
-        self.declare_parameter("airframe", "x500_lidar_down")
+        self.declare_parameter("camera_source", "1")
+        self.declare_parameter("airframe", "x500_lidar_down_0")
         self.declare_parameter("camera_width", 1280)
         self.declare_parameter("camera_height", 720)
         self.declare_parameter("camera_fps", 30)
         self.declare_parameter("flip_method", 0)
         self.declare_parameter("cam_rate_hz", 30)
+        self.declare_parameter("i2c_bus", 7)
+        self.declare_parameter("i2c_addr", 0x62)
         self.declare_parameter("lidar_rate_hz", 10)
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
-        self.declare_parameter("show_window", False)
+        self.declare_parameter("show_window", True)
         self.declare_parameter("use_filter", True)
         self.declare_parameter("lidar_alpha", 0.3)
-        self.x_m = 0.
-        self.y_m = 0.
+        self.declare_parameter("world","aruco_windy")
+        self.declare_parameter("lidar_altitude",0.17) # lidar와 지면 사이의 거리 (빼야하는 값)
+        self.x_m=0.
+        self.y_m=0.
 
         # 파라미터 값 읽기
+        if int(self.get_parameter("camera_source").value) == 1:
+            src_param = (
+    'udpsrc port=5600 caps="application/x-rtp,media=video,encoding-name=H264,'
+    'payload=96,clock-rate=90000" ! '
+    'rtpjitterbuffer latency=0 ! queue ! rtph264depay ! h264parse ! avdec_h264 ! '
+    'videoconvert ! video/x-raw,format=BGR ! '
+    'appsink sync=false max-buffers=1 drop=true'
+)       
+        #src_param = str(self.get_parameter("camera_source").value)
 
         airframe_ = str(self.get_parameter("airframe").value)
         width = int(self.get_parameter("camera_width").value)
@@ -73,23 +83,48 @@ class MarkerRecognition(Node):
         fps = int(self.get_parameter("camera_fps").value)
         flip_method = int(self.get_parameter("flip_method").value)
         cam_rate = float(self.get_parameter("cam_rate_hz").value)
+        bus_id = int(self.get_parameter("i2c_bus").value)
+        self._i2c_addr = int(self.get_parameter("i2c_addr").value)
+        lidar_rate = float(self.get_parameter("lidar_rate_hz").value)
         self._frame_id = str(self.get_parameter("frame_id").value)
         self._publish_debug = bool(self.get_parameter("debug").value)
         self._show_window = bool(self.get_parameter("show_window").value)
         self._use_filter = bool(self.get_parameter("use_filter").value)
+        self._alpha = float(self.get_parameter("lidar_alpha").value)
+        self._lidar_altitude = float(self.get_parameter("lidar_altitude").value)
+        world_=str(self.get_parameter("world").value)
 
         self._filtered_z: Optional[float] = None
         mission_mode = "flight"
         self._altitude = 0.0
-        src_param = build_gst_pipeline(width,height,fps,0) #need further review
-
 
         # 카메라 열기
         self._cap = None
-        self.get_logger().info(f"Trying to open as GStreamer pipeline:\n{src_param}")
-        cap = cv2.VideoCapture(src_param, cv2.CAP_GSTREAMER)
-        if cap.isOpened():
+
+        if src_param.startswith("udp://") or src_param.endswith(".mp4"):
+            # Use GStreamer pipeline for UDP stream or video file
+            pipeline = (
+                f"udpsrc port=5600 ! application/x-rtp, encoding-name=H264 ! "
+                f"rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink"
+            )
+            self.get_logger().info(f"Opening UDP stream pipeline:\n{pipeline}")
+            cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
+            if cap.isOpened():
                 self._cap = cap
+            else:
+                self.get_logger().error("Failed to open UDP video stream")
+        else:
+            try:
+                idx = int(src_param)
+                self.get_logger().info(f"Opening V4L2 index {idx}")
+                cap = cv2.VideoCapture(idx)
+                if cap.isOpened():
+                    self._cap = cap
+            except ValueError:
+                self.get_logger().info(f"Trying to open as GStreamer pipeline:\n{src_param}")
+                cap = cv2.VideoCapture(src_param, cv2.CAP_GSTREAMER)
+                if cap.isOpened():
+                    self._cap = cap
 
         if self._cap is None or not self._cap.isOpened():
             self.get_logger().error("Unable to open camera")
@@ -112,6 +147,13 @@ class MarkerRecognition(Node):
             10
         )
 
+        self._lidar_sub = self.create_subscription(
+            PointCloud2,
+            "/world/" + world_ + "/model/" + airframe_ + "/link/lidar_sensor_link/sensor/lidar/scan/points",
+            self._lidar_cb,
+            10
+        )
+        #self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
 
         # 퍼블리셔
         self._bridge = CvBridge()
@@ -122,10 +164,12 @@ class MarkerRecognition(Node):
 
         self._camera_timer = self.create_timer(1.0 / cam_rate, self._camera_timer_cb)
 
+    def _mission_cb(self, msg: String) -> None:
+       mission_mode = msg.data
+
     # 오도메트리 콜백: 자세(roll,pitch) 계산
     def _odom_cb(self, msg: VehicleOdometry) -> None:
         #self.get_logger().info("Odomotery called")
-        self._altitude = -msg.position[2]
         w, x, y, z = msg.q
         # Roll
         sinr_cosp = 2.0 * (w * x + y * z)
@@ -142,6 +186,13 @@ class MarkerRecognition(Node):
         self._pitch = pitch
         self._have_attitude = True
 
+
+    def _lidar_cb(self, msg: PointCloud2) ->None:
+        #self.get_logger().info("Lidar data called")
+        raw = bytes(msg.data)
+        first_four = raw[0:4]
+        self._altitude = struct.unpack('<f', first_four)[0]*np.cos(self._pitch)*np.cos(self._roll) - self._lidar_altitude
+        self.get_logger().info(f"calculated altitude: {self._altitude:.04f}")
 
     # 카메라 프레임 처리
     def _camera_timer_cb(self) -> None:
@@ -165,10 +216,9 @@ class MarkerRecognition(Node):
             dx = cx - cx0
             dy = cy0 - cy
 
-            # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정.
+            # self._latest_z는 보정된 카메라 높이(수직 z). 카메라 optical axis와 정렬 가정. # obsolete comment
             self.x_m = dx/500
             self.y_m = dy/500
-
 
             if self._publish_debug:
                 cv2.drawMarker(
@@ -188,6 +238,9 @@ class MarkerRecognition(Node):
                     thickness=1,
                 )
 
+            
+
+
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
@@ -198,6 +251,12 @@ class MarkerRecognition(Node):
 
         if self._publish_debug:
             self._publish_image(frame)
+
+        if self._show_window:
+            cv2.imshow("landing/video", frame)
+            if cv2.waitKey(1) & 0xFF == 27:
+                self.get_logger().info("ESC pressed - shutting down")
+                rclpy.shutdown()
 
     def _publish_image(self, frame: np.ndarray) -> None:
         img_msg = self._bridge.cv2_to_imgmsg(frame, encoding="bgr8")
@@ -210,7 +269,7 @@ class MarkerRecognition(Node):
         # 왜곡 계수와 카메라 행렬 적용
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray,
-            self._ARUCO_DICT,
+            self.ARUCO_DICT,
             parameters=self._ARUCO_PARAMS,cameraMatrix=self._CAMERA_MATRIX,
             distCoeff=self._DIST_COEFFS)
         if ids is None or len(ids) == 0:
