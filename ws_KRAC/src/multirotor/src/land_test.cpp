@@ -63,7 +63,7 @@ class LandingTest : public rclcpp::Node {
 
         if(!armed_ && mission_mode_ != FINISHED) {
           land_mode_ = this->get_parameter("land_param").as_int();
-          start_mode_ = this->get_parameter("start_param").as_int();
+          //start_mode_ = this->get_parameter("start_param").as_int();
 
           if(start_mode_ == 0) mission_mode_ = LANDING;
           this->publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_SET_MODE, 1, 6);
@@ -157,7 +157,7 @@ class LandingTest : public rclcpp::Node {
 
     float nan = std::numeric_limits<float>::quiet_NaN();
 
-    int start_mode_ = 0;
+    final int start_mode_ = 0;
     int land_mode_ = 0;
     Mission mission_mode_ = FLIGHT;
 };
