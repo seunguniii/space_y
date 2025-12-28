@@ -51,10 +51,10 @@ class LandingTest : public rclcpp::Node {
           return;
         }
 
-        if(!armed_ && mission_mode_ != FINISHED) {
+        if(!started_ && mission_mode_ != FINISHED) {
           mission_mode_ = LANDING;
           this->publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_SET_MODE, 1, 6);
-          this->arm();
+          this->start();
         }
 
         publish_offboard_control_mode();
@@ -67,9 +67,9 @@ class LandingTest : public rclcpp::Node {
             break;
 
           case FINISHED:
-            if(landed_ && armed_) disarm();
+            if(landed_ && started_) disarm();
             mission_msg.data = "FINISHED";
-            if(!armed_) return;
+            if(!started_) return;
             break;
         }
         mission_mode_publisher_->publish(mission_msg);
@@ -99,15 +99,15 @@ class LandingTest : public rclcpp::Node {
     };
 
     bool has_odom_ = false;
-    bool armed_ = false;
+    bool started_ = false;
     bool landed_ = false;
 
     //int hold_counter_ = 0;
     //int HOLD_THRESHOLD = 20;
 
-    float k = 1.0f;
+    float k = 0.25f;
 
-    void arm();
+    void start();
     void disarm();
 
     void publish_offboard_control_mode();
@@ -121,7 +121,7 @@ class LandingTest : public rclcpp::Node {
     float acc_alt_ = 0.0f;
 
     float low_enough_ = -0.7f;
-    float descent_step_ = 1.0f;
+    float descent_step_ = 0.3f;
     float iter_ratio_ = 0.2f;
     float rad_to_deg = 180/M_PI;
 
@@ -130,24 +130,22 @@ class LandingTest : public rclcpp::Node {
     Mission mission_mode_ = LANDING;
 };
 
-void LandingTest::arm() {
-  publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0);
-
-  RCLCPP_INFO(this->get_logger(), "Arm command send");
-  armed_ = true;
+void LandingTest::start() {
+  RCLCPP_INFO(this->get_logger(), "Start landing sequence");
+  started_ = true;
 }
 
 void LandingTest::disarm() {
   publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 0.0);
 
   RCLCPP_INFO(this->get_logger(), "Disarm command send");
-  armed_ = false;
+  started_ = false;
 }
 
 void LandingTest::publish_offboard_control_mode() {
   OffboardControlMode msg {};
-  msg.position = mission_mode_ == LANDING && land_mode_ == 1? false:true;
-  msg.velocity = mission_mode_ == LANDING && land_mode_ == 1? true:false;
+  msg.position = true;
+  msg.velocity = false;
   msg.acceleration = false;
   msg.attitude = false;
   msg.body_rate = false;
@@ -162,7 +160,7 @@ void LandingTest::land() {
 
   q.normalize();
   Eigen::Vector3f targetFRD (0, 0, 0);
-  iter_ratio_ = log10f(descent_step_*100)*0.1
+  iter_ratio_ = log10f(descent_step_*100)*k;
   float l = -acc_alt_*iter_ratio_;
   if(desired_x_ != 0 || desired_y_ != 0) targetFRD = {desired_y_*l, desired_x_*l, 0};
 
@@ -171,7 +169,6 @@ void LandingTest::land() {
   Eigen::Vector3f targetNED = current + q*targetFRD;
 
   msg.position= {targetNED[0], targetNED[1], acc_alt_ + descent_step_};
-  break;  
 
   if(acc_alt_ > low_enough_) {
     publish_vehicle_command(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND);
