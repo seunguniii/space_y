@@ -156,7 +156,7 @@ class FlightTest(Node):
                 if self.target_index < len(self.target) - 1:
                     self.target_index += 1 
                     self.reached_target_counter = 0.0
-                else:
+                else: #land 추가 
                     self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_LAND, 0.0, 0.0)
                     self.get_logger().info("LAND COMMAND SEND")
                     self.timer.cancel()
