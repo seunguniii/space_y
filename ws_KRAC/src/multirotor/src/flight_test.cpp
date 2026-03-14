@@ -7,8 +7,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "geometry_msgs/msg/point.hpp"
-
 #include "px4_msgs/msg/offboard_control_mode.hpp"
 #include "px4_msgs/msg/trajectory_setpoint.hpp"
 #include "px4_msgs/msg/vehicle_command.hpp"
@@ -40,9 +38,14 @@ class OffboardControl : public rclcpp::Node {
           return;
         }
 
-        if(!armed_ && mission_mode_ != FINISHED) {
+        if(!armed_ && mission_mode_ == STANDBY) {
           this->publish_vehicle_command(VehicleCommand::VEHICLE_CMD_DO_SET_MODE, 1, 6);
           this->arm();
+        }
+        
+        if(mission_mode_ == STANDBY) {
+          this->set_origin();
+          if(set_origin_done) mission_mode_ = FLIGHT;
         }
 
         publish_offboard_control_mode();
@@ -56,7 +59,6 @@ class OffboardControl : public rclcpp::Node {
             land();
             break;
 
-          default:
           case FINISHED:
             if(landed_ && armed_) disarm();
             if(!armed_) return;
@@ -83,19 +85,21 @@ class OffboardControl : public rclcpp::Node {
     px4_msgs::msg::VehicleOdometry curr_odom_;
 
     enum MissionMode {
+        STANDBY,
         FLIGHT,
         LANDING,
         FINISHED
     };
 
-    MissionMode mission_mode_ = FLIGHT;
+    MissionMode mission_mode_ = STANDBY;
 
     std::vector<std::array<float,3>> waypoints_ = {
-      {0.0f, 0.0f, -4.0f},
-      {3.0f, 0.0f, -4.0f},
-      {0.0f, 0.0f, -4.0f},
-      {0.0f, 3.0f, -4.0f},
-      {0.0f, 0.0f, -4.0f},
+      {0.0f, 0.0f, -2.0f},
+      {2.0f, 0.0f, -2.0f},
+      {0.0f, 0.0f, -2.0f},
+      {0.0f, 2.0f, -2.0f},
+      {0.0f, 0.0f, -2.0f},
+      {0.0f, 0.0f, -3.0f},
     };
 
     uint64_t offboard_setpoint_counter_ {0};
@@ -117,7 +121,35 @@ class OffboardControl : public rclcpp::Node {
     void publish_vehicle_command(uint16_t command, float param1 = 0.0, float param2 = 0.0);
 
     void publish_vehicle_command(int command, float value);
+    
+    void set_origin();
+    float origin[3] = {0, 0, 0};
+    bool set_origin_done = false;
+    int origin_counter = 0;
+    int origin_count_threshold = 10;
 };
+
+void OffboardControl::set_origin(){
+  if(origin_counter < origin_count_threshold){
+    origin[0] += curr_odom_.position[0];
+    origin[1] += curr_odom_.position[1];
+    origin[2] += curr_odom_.position[2];
+    origin_counter ++;
+  }
+  else {    
+    origin[0] /= origin_count_threshold;
+    origin[1] /= origin_count_threshold;
+    origin[2] /= origin_count_threshold;
+
+    set_origin_done = true;
+    RCLCPP_INFO(this->get_logger(), "Origin set to (%f, %f, %f)", origin[0], origin[1], origin[2]);
+    for(int i = 0; i < waypoints_.size(); i++){
+      waypoints_[i][0] += origin[0];
+      waypoints_[i][1] += origin[1];
+      waypoints_[i][2] += origin[2];
+    }
+  }  
+}
 
 void OffboardControl::arm() {
   publish_vehicle_command(VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0);
