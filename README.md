@@ -12,22 +12,22 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    🔗 https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html
 3. **PX4 main branch 설치**
    ```bash
-   $ git clone https://github.com/PX4/PX4-Autopilot.git --recursive
-   $ cd PX4-Autopilot
-   $ make px4_sitl
+   git clone https://github.com/PX4/PX4-Autopilot.git --recursive
+   cd PX4-Autopilot
+   make px4_sitl
    ```
    잘 실행되는지 확인
 4. **Micro XRCE-DDS Agent 설치**  
    ```bash
-   $ git clone -b v2.4.3 https://github.com/eProsima/Micro-XRCE-DDS-Agent.git
-   $ cd Micro-XRCE-DDS-Agent
-   $ mkdir build
-   $ cd build
-   $ cmake ..
-   $ make
-   $ sudo make install
-   $ sudo ldconfig /usr/local/lib/
-   $ MicroXRCEAgent udp4 -p 8888
+   git clone -b v2.4.3 https://github.com/eProsima/Micro-XRCE-DDS-Agent.git
+   cd Micro-XRCE-DDS-Agent
+   mkdir build
+   cd build
+   cmake ..
+   make
+   sudo make install
+   sudo ldconfig /usr/local/lib/
+   MicroXRCEAgent udp4 -p 8888
    잘 실행되는지 확인
 6. **QGroundControl 설치**  
    🔗 https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html
@@ -39,14 +39,14 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    ✅ `GStreamer: YES` 확인 필수
 8. **ros-gz-bridge 설치 (from source)**  
    ```bash
-   $ sudo apt install ros-humble-ros-gzharmonic
+   sudo apt install ros-humble-ros-gzharmonic
    ```
 9. **px4_msgs workspace 설치 및 빌드**  
    ```bash
-   $ mkdir -p ~/px4_ros_ws/src/
-   $ cd ~/px4_ros_ws/src/
-   $ git clone https://github.com/PX4/px4_msgs.git
-   $ git clone https://github.com/PX4/px4_ros_com.git
+   mkdir -p ~/px4_ros_ws/src/
+   cd ~/px4_ros_ws/src/
+   git clone https://github.com/PX4/px4_msgs.git
+   git clone https://github.com/PX4/px4_ros_com.git
    ```
 10. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서** 참고하여 자동착륙 모듈 실행
 
