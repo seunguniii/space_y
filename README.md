@@ -31,25 +31,36 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    ```
    잘 실행되는지 확인
 6. **QGroundControl 설치**  
-   🔗 https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html
-7. **OpenCV 4.5.4에 GStreamer 설치 여부 확인 (중요)**  
+   ```bash
+   sudo usermod -a -G dialout $USER
+   sudo apt-get remove modemmanager -y
+   sudo apt install gstreamer1.0-plugins-bad gstreamer1.0-libav gstreamer1.0-gl -y
+   sudo apt install libfuse2 -y
+   sudo apt install libxcb-xinerama0 libxkbcommon-x11-0 libxcb-cursor-dev -y
+   ```
+   https://github.com/mavlink/qgroundcontrol/releases/tag/v4.4.5 -> QGroundControl.AppImage 다운
+   ```bash
+   chmod +x ~/Downloads/QGroundControl.AppImage
+   ./QGroundControl.AppImage  (or double click)
+   ```
+8. **OpenCV 4.5.4에 GStreamer 설치 여부 확인 (중요)**  
    ```python
    import cv2
    print(cv2.getBuildInformation())
    ```
    ✅ `GStreamer: YES` 확인 필수
-8. **ros-gz-bridge 설치 (from source)**  
+9. **ros-gz-bridge 설치 (from source)**  
    ```bash
    sudo apt install ros-humble-ros-gzharmonic
    ```
-9. **px4_msgs workspace 설치 및 빌드**  
+10. **px4_msgs workspace 설치 및 빌드**  
    ```bash
    mkdir -p ~/px4_ros_ws/src/
    cd ~/px4_ros_ws/src/
    git clone https://github.com/PX4/px4_msgs.git
    git clone https://github.com/PX4/px4_ros_com.git
    ```
-10. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서** 참고하여 자동착륙 모듈 실행
+11. **LiDAR 및 ArUco 마커 기반 정밀 착륙 시뮬레이션 문서** 참고하여 자동착륙 모듈 실행
 
 > 💡 **필요한 워크스페이스 3개**
 > - `px4_ros_ws`
