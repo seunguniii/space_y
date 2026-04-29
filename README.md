@@ -28,6 +28,7 @@ ROS2 Humble + PX4 SITL + Gazebo Harmonic 환경 기준입니다.
    sudo make install
    sudo ldconfig /usr/local/lib/
    MicroXRCEAgent udp4 -p 8888
+   ```
    잘 실행되는지 확인
 6. **QGroundControl 설치**  
    🔗 https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html
