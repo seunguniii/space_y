@@ -587,6 +587,16 @@ class MarkerRecognition(Node):
                     markerSize=20,
                     thickness=2,
                 )
+                
+                cv2.line(
+                    frame,
+                    (int(cx0), int(cy0)),  # 화면 중앙점
+                    (int(cx), int(cy)),    # ArUco 마커 중앙점
+                    (0, 255, 0),           # 초록색 BGR
+                    3,                     # 선 두께
+                    cv2.LINE_AA,
+                )
+                
 
         else:
             self.x_m = float("nan")
@@ -633,7 +643,7 @@ class MarkerRecognition(Node):
 
         cv2.putText(
             frame,
-            f"x: {self.x_m:.2f} m, y: {self.y_m:.2f} m",
+            f"dx: {self.x_m:.2f} m, dy: {self.y_m:.2f} m",
             (30, 180),
             cv2.FONT_HERSHEY_SIMPLEX,
             1.0,
