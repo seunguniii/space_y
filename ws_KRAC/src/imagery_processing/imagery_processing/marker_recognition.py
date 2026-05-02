@@ -226,7 +226,7 @@ class MarkerRecognition(Node):
         # Internal states
         self.x_m = 0.0
         self.y_m = 0.0
-        self._filtered_z: Optional[float] = None
+        self._filtered_altitude: Optional[float] = None
         self._altitude = 0.0
         self._roll = 0.0
         self._pitch = 0.0
@@ -304,11 +304,19 @@ class MarkerRecognition(Node):
         self._bridge = CvBridge()
         self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
 
+        
+        image_qos = QoSProfile(
+    reliability=ReliabilityPolicy.BEST_EFFORT,
+    durability=DurabilityPolicy.VOLATILE,
+    history=HistoryPolicy.KEEP_LAST,
+    depth=1,
+)
+               
         if self._publish_debug:
             self._pub_img = self.create_publisher(
                 CompressedImage,
                 "/landing/video/compressed",
-                10,
+                image_qos,
             )
 
 
