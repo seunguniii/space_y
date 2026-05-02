@@ -188,7 +188,7 @@ class MarkerRecognition(Node):
         # A8 mini direct UDP zoom parameters
         self.declare_parameter("siyi_ip", "192.168.0.20")
         self.declare_parameter("siyi_port", 37260)
-        self.declare_parameter("auto_zoom_threshold_m", 6.0)
+        self.declare_parameter("auto_zoom_threshold_m", -1.0)
         self.declare_parameter("auto_zoom_factor", 4.0)
         self.declare_parameter("auto_zoom_enable", True)
 
