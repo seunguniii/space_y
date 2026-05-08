@@ -1,0 +1,22 @@
+[1.319s] Invoking command in '/home/spacey/space_y/ws_KRAC/src/imagery_processing': PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/imagery_processing/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/imagery_processing build --build-base /home/spacey/space_y/ws_KRAC/build/imagery_processing/build install --record /home/spacey/space_y/ws_KRAC/build/imagery_processing/install.log --single-version-externally-managed install_data
+[1.817s] running egg_info
+[1.819s] writing ../../build/imagery_processing/imagery_processing.egg-info/PKG-INFO
+[1.820s] writing dependency_links to ../../build/imagery_processing/imagery_processing.egg-info/dependency_links.txt
+[1.820s] writing entry points to ../../build/imagery_processing/imagery_processing.egg-info/entry_points.txt
+[1.821s] writing requirements to ../../build/imagery_processing/imagery_processing.egg-info/requires.txt
+[1.821s] writing top-level names to ../../build/imagery_processing/imagery_processing.egg-info/top_level.txt
+[1.825s] reading manifest file '../../build/imagery_processing/imagery_processing.egg-info/SOURCES.txt'
+[1.826s] adding license file 'LICENSE'
+[1.827s] writing manifest file '../../build/imagery_processing/imagery_processing.egg-info/SOURCES.txt'
+[1.827s] running build
+[1.828s] running build_py
+[1.828s] running install
+[1.829s] running install_lib
+[1.832s] running install_data
+[1.832s] running install_egg_info
+[1.836s] removing '/home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing-0.0.0-py3.10.egg-info' (and everything under it)
+[1.837s] Copying ../../build/imagery_processing/imagery_processing.egg-info to /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing-0.0.0-py3.10.egg-info
+[1.839s] running install_scripts
+[1.886s] Installing marker_recognition script to /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/imagery_processing
+[1.886s] writing list of installed files to '/home/spacey/space_y/ws_KRAC/build/imagery_processing/install.log'
+[1.970s] Invoked command in '/home/spacey/space_y/ws_KRAC/src/imagery_processing' returned '0': PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/imagery_processing/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/imagery_processing build --build-base /home/spacey/space_y/ws_KRAC/build/imagery_processing/build install --record /home/spacey/space_y/ws_KRAC/build/imagery_processing/install.log --single-version-externally-managed install_data

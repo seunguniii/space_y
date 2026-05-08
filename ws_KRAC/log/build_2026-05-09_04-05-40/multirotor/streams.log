@@ -1,0 +1,158 @@
+[0.582s] Invoking command in '/home/spacey/space_y/ws_KRAC/build/multirotor': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/spacey/space_y/ws_KRAC/src/multirotor -DCMAKE_INSTALL_PREFIX=/home/spacey/space_y/ws_KRAC/install/multirotor
+[0.777s] -- The C compiler identification is GNU 11.4.0
+[0.948s] -- The CXX compiler identification is GNU 11.4.0
+[0.972s] -- Detecting C compiler ABI info
+[1.132s] -- Detecting C compiler ABI info - done
+[1.145s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.146s] -- Detecting C compile features
+[1.147s] -- Detecting C compile features - done
+[1.155s] -- Detecting CXX compiler ABI info
+[1.329s] -- Detecting CXX compiler ABI info - done
+[1.342s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.342s] -- Detecting CXX compile features
+[1.343s] -- Detecting CXX compile features - done
+[1.350s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.706s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.948s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[2.047s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[2.058s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[2.077s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[2.104s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.139s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.236s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[2.243s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[2.492s] -- Found OpenSSL: /usr/lib/aarch64-linux-gnu/libcrypto.so (found version "3.0.2")  
+[2.549s] -- Found FastRTPS: /opt/ros/humble/include  
+[2.633s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.652s] -- Looking for pthread.h
+[2.828s] -- Looking for pthread.h - found
+[2.829s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[2.992s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[2.994s] -- Found Threads: TRUE  
+[3.105s] -- Found px4_msgs: 2.0.1 (/home/spacey/ws_sensor_combined/install/px4_msgs/share/px4_msgs/cmake)
+[3.136s] -- Found geometry_msgs: 4.9.1 (/opt/ros/humble/share/geometry_msgs/cmake)
+[3.340s] -- Configuring done
+[3.391s] -- Generating done
+[3.411s] -- Build files have been written to: /home/spacey/space_y/ws_KRAC/build/multirotor
+[3.442s] Invoked command in '/home/spacey/space_y/ws_KRAC/build/multirotor' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/spacey/space_y/ws_KRAC/src/multirotor -DCMAKE_INSTALL_PREFIX=/home/spacey/space_y/ws_KRAC/install/multirotor
+[3.448s] Invoking command in '/home/spacey/space_y/ws_KRAC/build/multirotor': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/spacey/space_y/ws_KRAC/build/multirotor -- -j6 -l6
+[3.559s] [ 16%] [32mBuilding CXX object CMakeFiles/land_test.dir/src/land_test.cpp.o[0m
+[3.566s] [ 33%] [32mBuilding CXX object CMakeFiles/flight_test.dir/src/flight_test.cpp.o[0m
+[3.589s] [ 50%] [32mBuilding CXX object CMakeFiles/flight.dir/src/flight.cpp.o[0m
+[6.526s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.526s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.526s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/land_test.cpp:5[m[K:
+[6.527s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::pload(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.527s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1671:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.527s]  1671 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.527s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.527s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.527s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.527s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/land_test.cpp:5[m[K:
+[6.528s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.528s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.528s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[6.529s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.530s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.532s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/land_test.cpp:5[m[K:
+[6.532s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::ploadu(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.532s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1716:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.532s]  1716 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.532s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.532s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.533s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.533s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/land_test.cpp:5[m[K:
+[6.533s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.533s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.533s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[6.565s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.565s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.565s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight.cpp:5[m[K:
+[6.565s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::pload(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.566s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1671:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.566s]  1671 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.566s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.566s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.566s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.566s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight.cpp:5[m[K:
+[6.566s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.567s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.567s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[6.568s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.569s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.569s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight.cpp:5[m[K:
+[6.569s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::ploadu(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.569s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1716:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.569s]  1716 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.569s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.570s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.570s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.570s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight.cpp:5[m[K:
+[6.570s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.570s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.570s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[6.736s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.737s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.737s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:5[m[K:
+[6.737s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::pload(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.737s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1671:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.737s]  1671 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.737s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.738s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.738s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.738s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:5[m[K:
+[6.738s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.738s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.738s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[6.740s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:214[m[K,
+[6.740s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.740s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:5[m[K:
+[6.740s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:[m[K In function ‘[01m[KPacket Eigen::internal::ploadu(const typename Eigen::internal::unpacket_traits<T>::type*) [with Packet = Eigen::internal::eigen_packet_wrapper<int, 2>; typename Eigen::internal::unpacket_traits<T>::type = signed char][m[K’:
+[6.740s] [01m[K/usr/include/eigen3/Eigen/src/Core/arch/NEON/PacketMath.h:1716:9:[m[K [01;35m[Kwarning: [m[K‘[01m[Kvoid* memcpy(void*, const void*, size_t)[m[K’ copying an object of non-trivial type ‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} from an array of ‘[01m[Kconst int8_t[m[K’ {aka ‘[01m[Kconst signed char[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wclass-memaccess-Wclass-memaccess]8;;[m[K]
+[6.741s]  1716 |   [01;35m[Kmemcpy(&res, from, sizeof(Packet4c))[m[K;
+[6.741s]       |   [01;35m[K~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[6.741s] In file included from [01m[K/usr/include/eigen3/Eigen/Core:172[m[K,
+[6.741s]                  from [01m[K/usr/include/eigen3/Eigen/Dense:1[m[K,
+[6.741s]                  from [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:5[m[K:
+[6.741s] [01m[K/usr/include/eigen3/Eigen/src/Core/GenericPacketMath.h:159:8:[m[K [01;36m[Knote: [m[K‘[01m[KEigen::internal::Packet4c[m[K’ {aka ‘[01m[Kstruct Eigen::internal::eigen_packet_wrapper<int, 2>[m[K’} declared here
+[6.741s]   159 | struct [01;36m[Keigen_packet_wrapper[m[K
+[6.741s]       |        [01;36m[K^~~~~~~~~~~~~~~~~~~~[m[K
+[13.682s] [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:[m[K In lambda function:
+[13.685s] [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:53:15:[m[K [01;35m[Kwarning: [m[Kenumeration value ‘[01m[KSTANDBY[m[K’ not handled in switch [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wswitch-Wswitch]8;;[m[K]
+[13.685s]    53 |         switch[01;35m[K([m[Kmission_mode_) {
+[13.685s]       |               [01;35m[K^[m[K
+[13.688s] [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:[m[K In member function ‘[01m[Kvoid OffboardControl::set_origin()[m[K’:
+[13.689s] [01m[K/home/spacey/space_y/ws_KRAC/src/multirotor/src/flight_test.cpp:146:22:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<std::array<float, 3> >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wsign-compare-Wsign-compare]8;;[m[K]
+[13.689s]   146 |     for(int i = 0; [01;35m[Ki < waypoints_.size()[m[K; i++){
+[13.689s]       |                    [01;35m[K~~^~~~~~~~~~~~~~~~~~~[m[K
+[58.906s] [ 66%] [32m[1mLinking CXX executable flight_test[0m
+[60.507s] [ 66%] Built target flight_test
+[67.996s] [ 83%] [32m[1mLinking CXX executable land_test[0m
+[69.030s] [100%] [32m[1mLinking CXX executable flight[0m
+[69.867s] [100%] Built target land_test
+[70.823s] [100%] Built target flight
+[70.909s] Invoked command in '/home/spacey/space_y/ws_KRAC/build/multirotor' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/spacey/space_y/ws_KRAC/build/multirotor -- -j6 -l6
+[70.972s] Invoking command in '/home/spacey/space_y/ws_KRAC/build/multirotor': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/spacey/space_y/ws_KRAC/build/multirotor
+[70.987s] -- Install configuration: ""
+[70.988s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/flight
+[71.008s] -- Set runtime path of "/home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/flight" to ""
+[71.008s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/flight_test
+[71.022s] -- Set runtime path of "/home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/flight_test" to ""
+[71.022s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/land_test
+[71.040s] -- Set runtime path of "/home/spacey/space_y/ws_KRAC/install/multirotor/lib/multirotor/land_test" to ""
+[71.041s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/ament_index/resource_index/package_run_dependencies/multirotor
+[71.041s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/ament_index/resource_index/parent_prefix_path/multirotor
+[71.043s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/environment/ament_prefix_path.sh
+[71.043s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/environment/ament_prefix_path.dsv
+[71.044s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/environment/path.sh
+[71.044s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/environment/path.dsv
+[71.045s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/local_setup.bash
+[71.045s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/local_setup.sh
+[71.046s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/local_setup.zsh
+[71.046s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/local_setup.dsv
+[71.047s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/package.dsv
+[71.047s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/ament_index/resource_index/packages/multirotor
+[71.048s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/cmake/multirotorConfig.cmake
+[71.048s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/cmake/multirotorConfig-version.cmake
+[71.048s] -- Installing: /home/spacey/space_y/ws_KRAC/install/multirotor/share/multirotor/package.xml
+[71.066s] Invoked command in '/home/spacey/space_y/ws_KRAC/build/multirotor' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/spacey/space_y/ws_KRAC/build/multirotor

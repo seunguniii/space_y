@@ -1,0 +1,8 @@
+source;share/multirotor/hook/cmake_prefix_path.ps1
+source;share/multirotor/hook/cmake_prefix_path.dsv
+source;share/multirotor/hook/cmake_prefix_path.sh
+source;share/multirotor/local_setup.bash
+source;share/multirotor/local_setup.dsv
+source;share/multirotor/local_setup.ps1
+source;share/multirotor/local_setup.sh
+source;share/multirotor/local_setup.zsh

@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/streaming_test/streaming_test.egg-info
+writing ../../build/streaming_test/streaming_test.egg-info/PKG-INFO
+writing dependency_links to ../../build/streaming_test/streaming_test.egg-info/dependency_links.txt
+writing entry points to ../../build/streaming_test/streaming_test.egg-info/entry_points.txt
+writing requirements to ../../build/streaming_test/streaming_test.egg-info/requires.txt
+writing top-level names to ../../build/streaming_test/streaming_test.egg-info/top_level.txt
+writing manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+reading manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+writing manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build
+creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib
+creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+copying streaming_test/__init__.py -> /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+copying streaming_test/streaming_node.py -> /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+running install
+running install_lib
+creating /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+copying /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test/__init__.py -> /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+copying /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test/streaming_node.py -> /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+byte-compiling /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test/streaming_node.py to streaming_node.cpython-310.pyc
+running install_data
+creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index
+creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index
+creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index/packages
+copying resource/streaming_test -> /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index/packages
+copying package.xml -> /home/spacey/space_y/ws_KRAC/install/streaming_test/share/streaming_test
+running install_egg_info
+Copying ../../build/streaming_test/streaming_test.egg-info to /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test-0.0.0-py3.10.egg-info
+running install_scripts
+Installing streaming_node script to /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/streaming_test
+writing list of installed files to '/home/spacey/space_y/ws_KRAC/build/streaming_test/install.log'

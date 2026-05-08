@@ -1,0 +1,33 @@
+running egg_info
+creating ../../build/imagery_processing/imagery_processing.egg-info
+writing ../../build/imagery_processing/imagery_processing.egg-info/PKG-INFO
+writing dependency_links to ../../build/imagery_processing/imagery_processing.egg-info/dependency_links.txt
+writing entry points to ../../build/imagery_processing/imagery_processing.egg-info/entry_points.txt
+writing requirements to ../../build/imagery_processing/imagery_processing.egg-info/requires.txt
+writing top-level names to ../../build/imagery_processing/imagery_processing.egg-info/top_level.txt
+writing manifest file '../../build/imagery_processing/imagery_processing.egg-info/SOURCES.txt'
+reading manifest file '../../build/imagery_processing/imagery_processing.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../../build/imagery_processing/imagery_processing.egg-info/SOURCES.txt'
+running build
+running build_py
+copying imagery_processing/marker_recognition.py -> /home/spacey/space_y/ws_KRAC/build/imagery_processing/build/lib/imagery_processing
+copying imagery_processing/__init__.py -> /home/spacey/space_y/ws_KRAC/build/imagery_processing/build/lib/imagery_processing
+running install
+running install_lib
+creating /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing
+copying /home/spacey/space_y/ws_KRAC/build/imagery_processing/build/lib/imagery_processing/marker_recognition.py -> /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing
+copying /home/spacey/space_y/ws_KRAC/build/imagery_processing/build/lib/imagery_processing/__init__.py -> /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing
+byte-compiling /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing/marker_recognition.py to marker_recognition.cpython-310.pyc
+byte-compiling /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/spacey/space_y/ws_KRAC/install/imagery_processing/share/ament_index
+creating /home/spacey/space_y/ws_KRAC/install/imagery_processing/share/ament_index/resource_index
+creating /home/spacey/space_y/ws_KRAC/install/imagery_processing/share/ament_index/resource_index/packages
+copying resource/imagery_processing -> /home/spacey/space_y/ws_KRAC/install/imagery_processing/share/ament_index/resource_index/packages
+copying package.xml -> /home/spacey/space_y/ws_KRAC/install/imagery_processing/share/imagery_processing
+running install_egg_info
+Copying ../../build/imagery_processing/imagery_processing.egg-info to /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages/imagery_processing-0.0.0-py3.10.egg-info
+running install_scripts
+Installing marker_recognition script to /home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/imagery_processing
+writing list of installed files to '/home/spacey/space_y/ws_KRAC/build/imagery_processing/install.log'

@@ -1,0 +1,10 @@
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/uninstall.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/multirotor_uninstall.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/land_test.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/test.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/edit_cache.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/rebuild_cache.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/list_install_components.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/install.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/install/local.dir
+/home/spacey/space_y/ws_KRAC/build/multirotor/CMakeFiles/install/strip.dir

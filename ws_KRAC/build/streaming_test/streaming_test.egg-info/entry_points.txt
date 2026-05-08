@@ -1,0 +1,3 @@
+[console_scripts]
+streaming_node = streaming_test.streaming_node:main
+

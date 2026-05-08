@@ -12,22 +12,12 @@ find_package(px4_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-add_executable(flight src/flight.cpp)
-add_executable(flight_test src/flight_test.cpp)
 add_executable(land_test src/land_test.cpp)
-
-ament_target_dependencies(flight rclcpp px4_msgs geometry_msgs)
-target_include_directories(flight PUBLIC ${EIGEN3_INCLUDE_DIRS})
-
-ament_target_dependencies(flight_test rclcpp px4_msgs geometry_msgs)
-target_include_directories(flight_test PUBLIC ${EIGEN3_INCLUDE_DIRS})
 
 ament_target_dependencies(land_test rclcpp px4_msgs geometry_msgs)
 target_include_directories(land_test PUBLIC ${EIGEN3_INCLUDE_DIRS})
 
 install(TARGETS
-  flight
-  flight_test
   land_test
   DESTINATION lib/${PROJECT_NAME})
 

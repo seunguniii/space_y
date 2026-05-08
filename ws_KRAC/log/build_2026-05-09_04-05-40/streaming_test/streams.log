@@ -1,0 +1,37 @@
+[1.958s] Invoking command in '/home/spacey/space_y/ws_KRAC/src/streaming_test': PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/streaming_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/streaming_test build --build-base /home/spacey/space_y/ws_KRAC/build/streaming_test/build install --record /home/spacey/space_y/ws_KRAC/build/streaming_test/install.log --single-version-externally-managed install_data
+[2.510s] running egg_info
+[2.511s] creating ../../build/streaming_test/streaming_test.egg-info
+[2.512s] writing ../../build/streaming_test/streaming_test.egg-info/PKG-INFO
+[2.513s] writing dependency_links to ../../build/streaming_test/streaming_test.egg-info/dependency_links.txt
+[2.514s] writing entry points to ../../build/streaming_test/streaming_test.egg-info/entry_points.txt
+[2.514s] writing requirements to ../../build/streaming_test/streaming_test.egg-info/requires.txt
+[2.514s] writing top-level names to ../../build/streaming_test/streaming_test.egg-info/top_level.txt
+[2.515s] writing manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+[2.518s] reading manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+[2.520s] writing manifest file '../../build/streaming_test/streaming_test.egg-info/SOURCES.txt'
+[2.520s] running build
+[2.520s] running build_py
+[2.521s] creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build
+[2.521s] creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib
+[2.521s] creating /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+[2.521s] copying streaming_test/__init__.py -> /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+[2.522s] copying streaming_test/streaming_node.py -> /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test
+[2.523s] running install
+[2.523s] running install_lib
+[2.525s] creating /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+[2.525s] copying /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test/__init__.py -> /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+[2.526s] copying /home/spacey/space_y/ws_KRAC/build/streaming_test/build/lib/streaming_test/streaming_node.py -> /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test
+[2.528s] byte-compiling /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test/__init__.py to __init__.cpython-310.pyc
+[2.529s] byte-compiling /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test/streaming_node.py to streaming_node.cpython-310.pyc
+[2.532s] running install_data
+[2.532s] creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index
+[2.532s] creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index
+[2.532s] creating /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index/packages
+[2.533s] copying resource/streaming_test -> /home/spacey/space_y/ws_KRAC/install/streaming_test/share/ament_index/resource_index/packages
+[2.533s] copying package.xml -> /home/spacey/space_y/ws_KRAC/install/streaming_test/share/streaming_test
+[2.533s] running install_egg_info
+[2.537s] Copying ../../build/streaming_test/streaming_test.egg-info to /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages/streaming_test-0.0.0-py3.10.egg-info
+[2.542s] running install_scripts
+[2.590s] Installing streaming_node script to /home/spacey/space_y/ws_KRAC/install/streaming_test/lib/streaming_test
+[2.591s] writing list of installed files to '/home/spacey/space_y/ws_KRAC/build/streaming_test/install.log'
+[2.672s] Invoked command in '/home/spacey/space_y/ws_KRAC/src/streaming_test' returned '0': PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/streaming_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/streaming_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/streaming_test build --build-base /home/spacey/space_y/ws_KRAC/build/streaming_test/build install --record /home/spacey/space_y/ws_KRAC/build/streaming_test/install.log --single-version-externally-managed install_data

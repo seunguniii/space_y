@@ -1,0 +1,4 @@
+Invoking command in '/home/spacey/space_y/ws_KRAC/build/multirotor': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/spacey/space_y/ws_KRAC/build/multirotor -- -j6 -l6
+Invoked command in '/home/spacey/space_y/ws_KRAC/build/multirotor' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/spacey/space_y/ws_KRAC/build/multirotor -- -j6 -l6
+Invoking command in '/home/spacey/space_y/ws_KRAC/build/multirotor': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/spacey/space_y/ws_KRAC/build/multirotor
+Invoked command in '/home/spacey/space_y/ws_KRAC/build/multirotor' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/spacey/space_y/ws_KRAC/build/multirotor

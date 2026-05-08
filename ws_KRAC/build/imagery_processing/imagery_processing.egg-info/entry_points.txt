@@ -1,0 +1,3 @@
+[console_scripts]
+marker_recognition = imagery_processing.marker_recognition:main
+

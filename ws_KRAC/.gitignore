@@ -1,0 +1,6 @@
+ws_KRAC/build/
+ws_KRAC/install/
+ws_KRAC/log/
+
+*.pyc
+__pycache__/

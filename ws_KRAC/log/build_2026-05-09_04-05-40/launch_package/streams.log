@@ -1,0 +1,35 @@
+[1.619s] Invoking command in '/home/spacey/space_y/ws_KRAC/src/launch_package': AMENT_PREFIX_PATH=/home/spacey/space_y/ws_KRAC/install/imagery_processing:${AMENT_PREFIX_PATH} PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/launch_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages:/home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/launch_package build --build-base /home/spacey/space_y/ws_KRAC/build/launch_package/build install --record /home/spacey/space_y/ws_KRAC/build/launch_package/install.log --single-version-externally-managed install_data
+[2.268s] running egg_info
+[2.269s] creating ../../build/launch_package/launch_package.egg-info
+[2.270s] writing ../../build/launch_package/launch_package.egg-info/PKG-INFO
+[2.270s] writing dependency_links to ../../build/launch_package/launch_package.egg-info/dependency_links.txt
+[2.271s] writing entry points to ../../build/launch_package/launch_package.egg-info/entry_points.txt
+[2.271s] writing requirements to ../../build/launch_package/launch_package.egg-info/requires.txt
+[2.272s] writing top-level names to ../../build/launch_package/launch_package.egg-info/top_level.txt
+[2.272s] writing manifest file '../../build/launch_package/launch_package.egg-info/SOURCES.txt'
+[2.277s] reading manifest file '../../build/launch_package/launch_package.egg-info/SOURCES.txt'
+[2.279s] writing manifest file '../../build/launch_package/launch_package.egg-info/SOURCES.txt'
+[2.280s] running build
+[2.281s] running build_py
+[2.281s] creating /home/spacey/space_y/ws_KRAC/build/launch_package/build
+[2.282s] creating /home/spacey/space_y/ws_KRAC/build/launch_package/build/lib
+[2.282s] creating /home/spacey/space_y/ws_KRAC/build/launch_package/build/lib/launch_package
+[2.283s] copying launch_package/__init__.py -> /home/spacey/space_y/ws_KRAC/build/launch_package/build/lib/launch_package
+[2.284s] running install
+[2.285s] running install_lib
+[2.289s] creating /home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages/launch_package
+[2.289s] copying /home/spacey/space_y/ws_KRAC/build/launch_package/build/lib/launch_package/__init__.py -> /home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages/launch_package
+[2.293s] byte-compiling /home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages/launch_package/__init__.py to __init__.cpython-310.pyc
+[2.294s] running install_data
+[2.294s] creating /home/spacey/space_y/ws_KRAC/install/launch_package/share/ament_index
+[2.295s] creating /home/spacey/space_y/ws_KRAC/install/launch_package/share/ament_index/resource_index
+[2.295s] creating /home/spacey/space_y/ws_KRAC/install/launch_package/share/ament_index/resource_index/packages
+[2.296s] copying resource/launch_package -> /home/spacey/space_y/ws_KRAC/install/launch_package/share/ament_index/resource_index/packages
+[2.297s] copying package.xml -> /home/spacey/space_y/ws_KRAC/install/launch_package/share/launch_package
+[2.298s] creating /home/spacey/space_y/ws_KRAC/install/launch_package/share/launch_package/launch
+[2.298s] copying launch/detect_with_bag.launch.py -> /home/spacey/space_y/ws_KRAC/install/launch_package/share/launch_package/launch
+[2.299s] running install_egg_info
+[2.305s] Copying ../../build/launch_package/launch_package.egg-info to /home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages/launch_package-0.0.0-py3.10.egg-info
+[2.308s] running install_scripts
+[2.366s] writing list of installed files to '/home/spacey/space_y/ws_KRAC/build/launch_package/install.log'
+[2.473s] Invoked command in '/home/spacey/space_y/ws_KRAC/src/launch_package' returned '0': AMENT_PREFIX_PATH=/home/spacey/space_y/ws_KRAC/install/imagery_processing:${AMENT_PREFIX_PATH} PYTHONPATH=/home/spacey/space_y/ws_KRAC/build/launch_package/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/spacey/space_y/ws_KRAC/install/launch_package/lib/python3.10/site-packages:/home/spacey/space_y/ws_KRAC/install/imagery_processing/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/launch_package build --build-base /home/spacey/space_y/ws_KRAC/build/launch_package/build install --record /home/spacey/space_y/ws_KRAC/build/launch_package/install.log --single-version-externally-managed install_data

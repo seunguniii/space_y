@@ -1,0 +1,16 @@
+package.xml
+setup.cfg
+setup.py
+../../build/streaming_test/streaming_test.egg-info/PKG-INFO
+../../build/streaming_test/streaming_test.egg-info/SOURCES.txt
+../../build/streaming_test/streaming_test.egg-info/dependency_links.txt
+../../build/streaming_test/streaming_test.egg-info/entry_points.txt
+../../build/streaming_test/streaming_test.egg-info/requires.txt
+../../build/streaming_test/streaming_test.egg-info/top_level.txt
+../../build/streaming_test/streaming_test.egg-info/zip-safe
+resource/streaming_test
+streaming_test/__init__.py
+streaming_test/streaming_node.py
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py
