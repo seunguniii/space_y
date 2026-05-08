@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import os
 import math
 import socket
 import time
 from typing import Optional, Tuple
+
 import cv2
 import numpy as np
 import rclpy
@@ -17,6 +19,7 @@ from smbus import SMBus
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 from rcl_interfaces.msg import SetParametersResult
 from sensor_msgs.msg import CompressedImage
+
 
 def build_gst_pipeline() -> str:
     return (
@@ -31,25 +34,6 @@ def build_gst_pipeline() -> str:
 
 
 class SiyiA8MiniUDP:
-    """
-    SIYI A8 mini UDP control helper.
-
-    Default SDK control:
-      IP   : camera/gimbal IP
-      Port : 37260
-
-    CMD_ID 0x0F:
-      Absolute Zoom Auto Focus
-
-    Payload:
-      byte 1: zoom integer part
-      byte 2: zoom decimal part
-
-    Examples:
-      2.0x -> 02 00
-      4.0x -> 04 00
-    """
-
     def __init__(self, ip: str, port: int = 37260, timeout: float = 0.2):
         self.ip = ip
         self.port = port
@@ -103,14 +87,6 @@ class SiyiA8MiniUDP:
             return None
 
     def absolute_zoom(self, zoom: float) -> Optional[bytes]:
-        """
-        Set absolute zoom.
-
-        1.0 -> wide
-        2.0 -> 2x
-        4.0 -> 4x
-        """
-
         zoom = float(zoom)
 
         if zoom < 1.0:
@@ -131,9 +107,125 @@ class SiyiA8MiniUDP:
         return self.send_packet(packet)
 
 
+class TargetKalman2D:
+    """
+    2D target Kalman filter.
+
+    State:
+        x = [x_m, y_m, vx_mps, vy_mps]^T
+
+    Measurement:
+        z = [raw_x_m, raw_y_m]^T
+    """
+
+    def __init__(
+        self,
+        process_var: float = 0.01,
+        measurement_var: float = 0.08,
+        default_dt: float = 1.0 / 30.0,
+    ) -> None:
+        self.kf = cv2.KalmanFilter(4, 2)
+
+        self.default_dt = default_dt
+        self.initialized = False
+        self.last_time = time.monotonic()
+
+        self.kf.transitionMatrix = np.eye(4, dtype=np.float32)
+
+        self.kf.measurementMatrix = np.array(
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+            ],
+            dtype=np.float32,
+        )
+
+        self.kf.processNoiseCov = np.array(
+            [
+                [process_var, 0, 0, 0],
+                [0, process_var, 0, 0],
+                [0, 0, process_var * 10.0, 0],
+                [0, 0, 0, process_var * 10.0],
+            ],
+            dtype=np.float32,
+        )
+
+        self.kf.measurementNoiseCov = np.eye(2, dtype=np.float32) * measurement_var
+        self.kf.errorCovPost = np.eye(4, dtype=np.float32)
+
+    def reset(self) -> None:
+        self.initialized = False
+        self.last_time = time.monotonic()
+
+    def _get_dt(self) -> float:
+        now = time.monotonic()
+        dt = now - self.last_time
+        self.last_time = now
+
+        if dt <= 0.001 or dt > 1.0:
+            dt = self.default_dt
+
+        return dt
+
+    def _update_transition(self, dt: float) -> None:
+        self.kf.transitionMatrix = np.array(
+            [
+                [1, 0, dt, 0],
+                [0, 1, 0, dt],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ],
+            dtype=np.float32,
+        )
+
+    def update(self, raw_x_m: float, raw_y_m: float) -> Tuple[float, float]:
+        dt = self._get_dt()
+        self._update_transition(dt)
+
+        if not math.isfinite(raw_x_m) or not math.isfinite(raw_y_m):
+            return self.predict_only()
+
+        if not self.initialized:
+            self.kf.statePost = np.array(
+                [
+                    [raw_x_m],
+                    [raw_y_m],
+                    [0.0],
+                    [0.0],
+                ],
+                dtype=np.float32,
+            )
+            self.initialized = True
+            return raw_x_m, raw_y_m
+
+        self.kf.predict()
+
+        measurement = np.array(
+            [
+                [raw_x_m],
+                [raw_y_m],
+            ],
+            dtype=np.float32,
+        )
+
+        estimated = self.kf.correct(measurement)
+
+        return float(estimated[0, 0]), float(estimated[1, 0])
+
+    def predict_only(self) -> Tuple[float, float]:
+        if not self.initialized:
+            return float("nan"), float("nan")
+
+        dt = self._get_dt()
+        self._update_transition(dt)
+
+        predicted = self.kf.predict()
+
+        return float(predicted[0, 0]), float(predicted[1, 0])
+
+
 class MarkerRecognition(Node):
 
-    # Lidar constants
     I2C_BUS = 7
     LIDAR_ADDR = 0x62
 
@@ -149,7 +241,6 @@ class MarkerRecognition(Node):
     except AttributeError:
         _ARUCO_PARAMS = cv2.aruco.DetectorParameters_create()
 
-    # 1x zoom calibration
     _CAMERA_MATRIX_1X = np.array([
         [735.73139009, 0.0, 642.68011744],
         [0.0, 734.73302999, 375.24685578],
@@ -161,39 +252,39 @@ class MarkerRecognition(Node):
         dtype=np.float64,
     )
 
-    # 4x zoom calibration
     _CAMERA_MATRIX_4X = np.array([
-	    [1355.46604, 0.0, 612.878333],
-	    [0.0, 1348.64952, 347.526288],
-	    [0.0, 0.0, 1.0],
-	], dtype=np.float64)
+        [1355.46604, 0.0, 612.878333],
+        [0.0, 1348.64952, 347.526288],
+        [0.0, 0.0, 1.0],
+    ], dtype=np.float64)
 
     _DIST_COEFFS_4X = np.array(
-	    [-0.21032195, 0.37100331, -0.00570627, -0.0043965, -0.39666385]
-	, dtype=np.float64)
+        [-0.21032195, 0.37100331, -0.00570627, -0.0043965, -0.39666385],
+        dtype=np.float64,
+    )
 
     def __init__(self) -> None:
         super().__init__("marker_recognition")
 
         os.environ.setdefault("GST_DEBUG", "2")
 
-        # ROS parameters
         self.declare_parameter("frame_id", "camera_frame")
         self.declare_parameter("debug", True)
         self.declare_parameter("show_window", False)
         self.declare_parameter("frame_rate", 30.0)
         self.declare_parameter("lidar_altitude", 0.17)
-        self.declare_parameter("lidar_attitude_gate_deg", 20.0) # Lidar attitude threshold
+        self.declare_parameter("lidar_attitude_gate_deg", 20.0)
 
-        # A8 mini direct UDP zoom parameters
         self.declare_parameter("siyi_ip", "192.168.0.20")
         self.declare_parameter("siyi_port", 37260)
-        self.declare_parameter("auto_zoom_threshold_m", -1.0)
+        self.declare_parameter("auto_zoom_threshold_m", 10.0)
         self.declare_parameter("auto_zoom_factor", 4.0)
         self.declare_parameter("auto_zoom_enable", True)
 
-        
-        # Parameter values
+        self.declare_parameter("target_kf_process_var", 0.01)
+        self.declare_parameter("target_kf_measurement_var", 0.08)
+        self.declare_parameter("target_predict_timeout", 5.0)
+
         self._frame_id = str(self.get_parameter("frame_id").value)
         self._publish_debug = bool(self.get_parameter("debug").value)
         self._show_window = bool(self.get_parameter("show_window").value)
@@ -206,9 +297,21 @@ class MarkerRecognition(Node):
         self._auto_zoom_factor = float(self.get_parameter("auto_zoom_factor").value)
         self._auto_zoom_enable = bool(self.get_parameter("auto_zoom_enable").value)
         self._lidar_attitude_gate_deg = float(
-        self.get_parameter("lidar_attitude_gate_deg").value)
+            self.get_parameter("lidar_attitude_gate_deg").value
+        )
+
+        self._target_kf_process_var = float(
+            self.get_parameter("target_kf_process_var").value
+        )
+        self._target_kf_measurement_var = float(
+            self.get_parameter("target_kf_measurement_var").value
+        )
+        self._target_predict_timeout = float(
+            self.get_parameter("target_predict_timeout").value
+        )
+
         self.add_on_set_parameters_callback(self._on_param_update)
-        # SIYI UDP direct control
+
         self._siyi = SiyiA8MiniUDP(
             ip=self._siyi_ip,
             port=self._siyi_port,
@@ -219,13 +322,15 @@ class MarkerRecognition(Node):
             f"SIYI A8 mini UDP control target: {self._siyi_ip}:{self._siyi_port}"
         )
 
-        # I2C lidar
         self._i2c_bus = SMBus(self.I2C_BUS)
-        self._lidar_timer = self.create_timer(0.05, self._lidar_timer_cb)  # 20 Hz
+        self._lidar_timer = self.create_timer(0.05, self._lidar_timer_cb)
 
-        # Internal states
         self.x_m = 0.0
         self.y_m = 0.0
+
+        self.raw_x_m = float("nan")
+        self.raw_y_m = float("nan")
+
         self._filtered_altitude: Optional[float] = None
         self._altitude = 0.0
         self._roll = 0.0
@@ -235,14 +340,21 @@ class MarkerRecognition(Node):
         self._last_lidar_log_time = 0.0
         self._lidar_log_interval = 0.5
         self._last_detect_preprocess = "none"
-        
-        # Debug counter
         self._lidar_reject_count = 0
 
-        # Auto zoom state
         self._current_zoom_factor = 1.0
 
-        # Camera open
+        self._target_kf = TargetKalman2D(
+            process_var=self._target_kf_process_var,
+            measurement_var=self._target_kf_measurement_var,
+            default_dt=1.0 / self.frame_rate,
+        )
+
+        self._last_target_detect_time: Optional[float] = None
+        self._target_display_mode = "none"
+        self._pred_cx = float("nan")
+        self._pred_cy = float("nan")
+
         src_param = build_gst_pipeline()
         self._cap = None
 
@@ -257,14 +369,12 @@ class MarkerRecognition(Node):
             self.get_logger().error("Unable to open camera")
             raise RuntimeError("Camera open failed")
 
-        # PX4 gimbal publisher only
         self._gimbal_pub = self.create_publisher(
             VehicleCommand,
             "/fmu/in/vehicle_command",
             10,
         )
 
-        # PX4 distance sensor publisher
         distance_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
@@ -286,12 +396,13 @@ class MarkerRecognition(Node):
             self._mission_cb,
             10,
         )
-        
+
         attitude_qos = QoSProfile(
-    reliability=ReliabilityPolicy.BEST_EFFORT,
-    durability=DurabilityPolicy.VOLATILE,
-    history=HistoryPolicy.KEEP_LAST,
-    depth=10,)
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+        )
 
         self._attitude_sub = self.create_subscription(
             VehicleAttitude,
@@ -300,18 +411,16 @@ class MarkerRecognition(Node):
             attitude_qos,
         )
 
-        # Publishers
         self._bridge = CvBridge()
         self._pub_point = self.create_publisher(PointStamped, "/landing/coordinates", 10)
 
-        
         image_qos = QoSProfile(
-    reliability=ReliabilityPolicy.BEST_EFFORT,
-    durability=DurabilityPolicy.VOLATILE,
-    history=HistoryPolicy.KEEP_LAST,
-    depth=1,
-)
-               
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,
+        )
+
         if self._publish_debug:
             self._pub_img = self.create_publisher(
                 CompressedImage,
@@ -319,12 +428,9 @@ class MarkerRecognition(Node):
                 image_qos,
             )
 
-
-        # Timers
         self._gimbal_timer = self.create_timer(1.0, self._set_gimbal_pitch_down)
         self._camera_timer = self.create_timer(1.0 / self.frame_rate, self._camera_timer_cb)
-        
-        # Camera calibration by zoom state
+
         self._camera_matrix_1x = self._CAMERA_MATRIX_1X.copy()
         self._dist_coeffs_1x = self._DIST_COEFFS_1X.copy()
 
@@ -332,7 +438,36 @@ class MarkerRecognition(Node):
         self._dist_coeffs_4x = self._DIST_COEFFS_4X.copy()
 
         self.get_logger().info("Using hard-coded 1x / 4x camera calibrations.")
-        
+        self.get_logger().info(
+            f"Target KF enabled: "
+            f"process_var={self._target_kf_process_var:.4f}, "
+            f"measurement_var={self._target_kf_measurement_var:.4f}, "
+            f"predict_timeout={self._target_predict_timeout:.1f}s"
+        )
+
+    def _recreate_target_kf(self) -> None:
+        self._target_kf = TargetKalman2D(
+            process_var=self._target_kf_process_var,
+            measurement_var=self._target_kf_measurement_var,
+            default_dt=1.0 / self.frame_rate,
+        )
+
+        self._last_target_detect_time = None
+        self._target_display_mode = "none"
+        self._pred_cx = float("nan")
+        self._pred_cy = float("nan")
+
+        self.x_m = float("nan")
+        self.y_m = float("nan")
+        self.raw_x_m = float("nan")
+        self.raw_y_m = float("nan")
+
+        self.get_logger().info(
+            f"[TARGET_KF] recreated: "
+            f"process_var={self._target_kf_process_var:.4f}, "
+            f"measurement_var={self._target_kf_measurement_var:.4f}"
+        )
+
     def _mission_cb(self, msg: String) -> None:
         self._mission_mode = msg.data
 
@@ -342,7 +477,6 @@ class MarkerRecognition(Node):
         while time.time() - start < timeout:
             status = self._i2c_bus.read_byte_data(self.LIDAR_ADDR, self.STATUS)
 
-            # status bit 0 == busy
             if (status & 0x01) == 0:
                 return True
 
@@ -351,7 +485,6 @@ class MarkerRecognition(Node):
         return False
 
     def _read_lidar_distance_cm(self) -> int:
-        # Start measurement
         self._i2c_bus.write_byte_data(
             self.LIDAR_ADDR,
             self.ACQ_COMMAND,
@@ -378,9 +511,9 @@ class MarkerRecognition(Node):
         try:
             distance_cm = self._read_lidar_distance_cm()
             distance_m = distance_cm / 100.0
-            
+
             raw_altitude = distance_m - self._lidar_altitude
-            
+
             if not self._is_lidar_attitude_valid():
                 if self._filtered_altitude is not None:
                     self._altitude = self._filtered_altitude
@@ -397,9 +530,8 @@ class MarkerRecognition(Node):
             if not math.isfinite(self._altitude):
                 return
 
-            # PX4 DistanceSensor publish
             msg = DistanceSensor()
-            msg.timestamp = self.get_clock().now().nanoseconds // 1000  # us
+            msg.timestamp = self.get_clock().now().nanoseconds // 1000
 
             msg.device_id = 0
             msg.min_distance = 0.05
@@ -420,6 +552,7 @@ class MarkerRecognition(Node):
                 msg.signal_quality = 100
             except Exception:
                 pass
+
             now_sec = self.get_clock().now().nanoseconds * 1e-9
 
             if now_sec - self._last_lidar_log_time >= self._lidar_log_interval:
@@ -429,9 +562,9 @@ class MarkerRecognition(Node):
                     f"lidar distance={distance_m:.3f} m, "
                     f"altitude={self._altitude:.3f} m, "
                     f"roll={math.degrees(self._roll):.1f} deg, "
-                    f"pitch={math.degrees(self._pitch):.1f} deg, "
+                    f"pitch={math.degrees(self._pitch):.1f} deg"
                 )
-                
+
             self._distance_sensor_pub.publish(msg)
             self._check_auto_zoom_by_altitude_direct_udp()
 
@@ -451,12 +584,9 @@ class MarkerRecognition(Node):
         target_zoom = self._current_zoom_factor
 
         if self._current_zoom_factor <= 1.01:
-            # 현재 1x일 때는 threshold 이상에서만 줌인
             if self._altitude >= zoom_in_threshold:
                 target_zoom = self._auto_zoom_factor
-
         else:
-            # 현재 줌인 상태일 때는 threshold - 0.5m 이하에서만 1x 복귀
             if self._altitude <= zoom_out_threshold:
                 target_zoom = 1.0
 
@@ -480,7 +610,7 @@ class MarkerRecognition(Node):
             )
 
         self._current_zoom_factor = target_zoom
-        
+
     def _publish_vehicle_command(
         self,
         command: int,
@@ -513,32 +643,30 @@ class MarkerRecognition(Node):
         self._gimbal_pub.publish(msg)
 
     def _set_gimbal_pitch_down(self) -> None:
-        # 1) Request gimbal manager control ownership once
         if not self._gimbal_configured:
             self._publish_vehicle_command(
                 command=VehicleCommand.VEHICLE_CMD_DO_GIMBAL_MANAGER_CONFIGURE,
-                param1=1.0,      # primary control sysid
-                param2=191.0,    # primary control compid
-                param3=-1.0,     # secondary sysid unused
-                param4=-1.0,     # secondary compid unused
+                param1=1.0,
+                param2=191.0,
+                param3=-1.0,
+                param4=-1.0,
                 param5=0.0,
                 param6=0.0,
-                param7=154.0,    # gimbal device id
+                param7=154.0,
             )
             self._gimbal_configured = True
             self.get_logger().info("Sent gimbal configure command")
             return
 
-        # 2) Send pitch/yaw command
         self._publish_vehicle_command(
             command=VehicleCommand.VEHICLE_CMD_DO_GIMBAL_MANAGER_PITCHYAW,
-            param1=-90.0,   # pitch [deg]
-            param2=0.0,     # yaw [deg]
-            param3=0.0,     # pitch rate [deg/s]
-            param4=0.0,     # yaw rate [deg/s]
-            param5=0.0,     # flags
+            param1=-90.0,
+            param2=0.0,
+            param3=0.0,
+            param4=0.0,
+            param5=0.0,
             param6=0.0,
-            param7=154.0,   # gimbal device id
+            param7=154.0,
         )
 
     def _camera_timer_cb(self) -> None:
@@ -551,32 +679,44 @@ class MarkerRecognition(Node):
         detected = False
         tag_centre = self._detect_first_tag(frame)
 
+        camera_matrix, _ = self._get_current_camera_calibration()
+        fx = camera_matrix[0, 0]
+        fy = camera_matrix[1, 1]
+
+        height, width = frame.shape[:2]
+        cx0 = width / 2.0
+        cy0 = height / 2.0
+
+        z = self._altitude
+
         if tag_centre is not None:
             detected = True
 
             cx, cy = tag_centre
 
-            camera_matrix, _ = self._get_current_camera_calibration()
+            dx_px = cx - cx0
+            dy_px = cy0 - cy
 
-            fx = camera_matrix[0, 0]
-            fy = camera_matrix[1, 1]
+            if math.isfinite(z) and z >= 0.05:
+                raw_x_m = dx_px / fx * z
+                raw_y_m = dy_px / fy * z
 
-            height, width = frame.shape[:2]
-            cx0 = width / 2.0
-            cy0 = height / 2.0
+                self.raw_x_m = raw_x_m
+                self.raw_y_m = raw_y_m
 
-            dx = cx - cx0
-            dy = cy0 - cy
+                self.x_m, self.y_m = self._target_kf.update(raw_x_m, raw_y_m)
 
-            z = self._altitude
+                self._last_target_detect_time = time.monotonic()
+                self._target_display_mode = "raw"
+                self._pred_cx = float("nan")
+                self._pred_cy = float("nan")
+            else:
+                self.raw_x_m = float("nan")
+                self.raw_y_m = float("nan")
+                self.x_m = float("nan")
+                self.y_m = float("nan")
+                self._target_display_mode = "raw"
 
-            if not np.isfinite(z) or z < 0.05:
-                z = float("nan")
-
-            self.x_m = dx / fx * z
-            self.y_m = dy / fy * z
-
-            # Debug marker drawing only
             if self._publish_debug:
                 cv2.drawMarker(
                     frame,
@@ -595,25 +735,59 @@ class MarkerRecognition(Node):
                     markerSize=20,
                     thickness=2,
                 )
-                
+
                 cv2.line(
                     frame,
-                    (int(cx0), int(cy0)),  # 화면 중앙점
-                    (int(cx), int(cy)),    # ArUco 마커 중앙점
-                    (0, 255, 0),           # 초록색 BGR
-                    3,                     # 선 두께
+                    (int(cx0), int(cy0)),
+                    (int(cx), int(cy)),
+                    (0, 255, 0),
+                    3,
                     cv2.LINE_AA,
                 )
-                
 
         else:
-            self.x_m = float("nan")
-            self.y_m = float("nan")
+            self.raw_x_m = float("nan")
+            self.raw_y_m = float("nan")
 
-        # =========================
-        # Overlay text section
-        # 이 아래는 detect/debug와 무관하게 항상 그림
-        # =========================
+            now = time.monotonic()
+
+            if (
+                self._last_target_detect_time is not None
+                and now - self._last_target_detect_time <= self._target_predict_timeout
+            ):
+                self.x_m, self.y_m = self._target_kf.predict_only()
+                self._target_display_mode = "predict"
+
+                if (
+                    math.isfinite(self.x_m)
+                    and math.isfinite(self.y_m)
+                    and math.isfinite(z)
+                    and z > 0.05
+                ):
+                    self._pred_cx = cx0 + self.x_m / z * fx
+                    self._pred_cy = cy0 - self.y_m / z * fy
+                else:
+                    self._pred_cx = float("nan")
+                    self._pred_cy = float("nan")
+
+            else:
+                self.x_m = float("nan")
+                self.y_m = float("nan")
+                self._pred_cx = float("nan")
+                self._pred_cy = float("nan")
+                self._target_display_mode = "none"
+                self._target_kf.reset()
+
+        if self._publish_debug and self._target_display_mode == "predict":
+            if math.isfinite(self._pred_cx) and math.isfinite(self._pred_cy):
+                cv2.drawMarker(
+                    frame,
+                    (int(self._pred_cx), int(self._pred_cy)),
+                    (0, 0, 255),
+                    markerType=cv2.MARKER_CROSS,
+                    markerSize=20,
+                    thickness=2,
+                )
 
         if detected:
             cv2.putText(
@@ -622,7 +796,18 @@ class MarkerRecognition(Node):
                 (30, 80),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.2,
-                (0, 255, 0),  # red
+                (0, 255, 0),
+                3,
+                cv2.LINE_AA,
+            )
+        elif self._target_display_mode == "predict":
+            cv2.putText(
+                frame,
+                "TARGET LOST - KF PREDICT",
+                (30, 80),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.2,
+                (0, 0, 255),
                 3,
                 cv2.LINE_AA,
             )
@@ -633,7 +818,7 @@ class MarkerRecognition(Node):
                 (30, 80),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.2,
-                (0, 0, 255),  # red
+                (0, 0, 255),
                 3,
                 cv2.LINE_AA,
             )
@@ -644,28 +829,52 @@ class MarkerRecognition(Node):
             (30, 130),
             cv2.FONT_HERSHEY_SIMPLEX,
             1.2,
-            (0, 0, 255),  # red
+            (0, 0, 255),
             3,
             cv2.LINE_AA,
         )
 
         cv2.putText(
             frame,
-            f"dx: {self.x_m:.2f} m, dy: {self.y_m:.2f} m",
+            f"raw: {self.raw_x_m:.2f}, {self.raw_y_m:.2f} m",
             (30, 180),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1.0,
-            (0, 0, 255),  # red
+            0.9,
+            (0, 255, 0),
             2,
             cv2.LINE_AA,
         )
-        
-        # 줌 레벨과 보정값 적용 여부 표시
+
+        body_right_preview = -self.y_m if math.isfinite(self.y_m) else float("nan")
+        body_forward_preview = self.x_m if math.isfinite(self.x_m) else float("nan")
+
+        cv2.putText(
+            frame,
+            f"cam filt: {self.x_m:.2f}, {self.y_m:.2f} m",
+            (30, 220),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.9,
+            (0, 0, 255),
+            2,
+            cv2.LINE_AA,
+        )
+
+        cv2.putText(
+            frame,
+            f"pub body R,F: {body_right_preview:.2f}, {body_forward_preview:.2f} m",
+            (30, 260),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.9,
+            (0, 0, 255),
+            2,
+            cv2.LINE_AA,
+        )
+
         calib_label = "4X" if abs(self._current_zoom_factor - 4.0) < 0.2 else "1X"
         cv2.putText(
             frame,
             f"ZOOM: {self._current_zoom_factor:.1f}x  CALIB: {calib_label}",
-            (30, 230),
+            (30, 300),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.9,
             (0, 255, 255),
@@ -673,26 +882,42 @@ class MarkerRecognition(Node):
             cv2.LINE_AA,
         )
 
-        # Publish landing coordinate
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
-        msg.point.x = float(self.x_m)
-        msg.point.y = float(self.y_m)
+
+        # Coordinate convention for /landing/coordinates:
+        #   point.x = body right(+), [m]
+        #   point.y = body forward(+), [m]
+        #   point.z = altitude, [m]
+        #
+        # The raw vision estimate self.x_m / self.y_m is in CAMERA frame:
+        #   self.x_m = camera right(+), [m]
+        #   self.y_m = camera forward(+), [m]
+        #
+        # Current camera mounting:
+        #   camera yaw is 90 deg counter-clockwise from body yaw.
+        #
+        # Therefore:
+        #   body_forward =  camera_right
+        #   body_right   = -camera_forward
+        body_right_m = -float(self.y_m)
+        body_forward_m = float(self.x_m)
+
+        msg.point.x = body_right_m
+        msg.point.y = body_forward_m
         msg.point.z = float(self._altitude)
 
         self._pub_point.publish(msg)
 
-        # Publish debug image
         if self._publish_debug and hasattr(self, "_pub_img"):
             self._publish_image(frame)
 
-        # Show local monitor window
         if self._show_window:
             cv2.imshow("landing_monitor", frame)
             key = cv2.waitKey(1) & 0xFF
 
-            if key == ord("q") or key == 27:  # q or ESC
+            if key == ord("q") or key == 27:
                 self.get_logger().info("Monitor window close requested")
                 rclpy.shutdown()
 
@@ -714,6 +939,7 @@ class MarkerRecognition(Node):
 
     def _detect_first_tag(self, frame: np.ndarray) -> Optional[Tuple[float, float]]:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
         clahe = cv2.createCLAHE(
             clipLimit=2.0,
             tileGridSize=(8, 8)
@@ -749,7 +975,7 @@ class MarkerRecognition(Node):
             pass
 
         return super().destroy_node()
-    
+
     def _attitude_cb(self, msg: VehicleAttitude) -> None:
         q = msg.q
 
@@ -758,12 +984,10 @@ class MarkerRecognition(Node):
         qy = float(q[2])
         qz = float(q[3])
 
-        # roll [rad]
         sinr_cosp = 2.0 * (qw * qx + qy * qz)
         cosr_cosp = 1.0 - 2.0 * (qx * qx + qy * qy)
         self._roll = math.atan2(sinr_cosp, cosr_cosp)
 
-        # pitch [rad]
         sinp = 2.0 * (qw * qy - qz * qx)
 
         if abs(sinp) >= 1.0:
@@ -772,15 +996,9 @@ class MarkerRecognition(Node):
             self._pitch = math.asin(sinp)
 
         self._have_attitude = True
-    
-    def _is_lidar_attitude_valid(self) -> bool:
-        """
-        Return False when roll/pitch is too large.
-        In that case, lidar may lose the ground.
-        """
 
+    def _is_lidar_attitude_valid(self) -> bool:
         if not self._have_attitude:
-            # attitude가 아직 없으면 일단 라이다 사용
             return True
 
         roll_deg = math.degrees(self._roll)
@@ -799,17 +1017,6 @@ class MarkerRecognition(Node):
         return True
 
     def _filter_lidar_altitude(self, raw_altitude: float) -> float:
-        """
-        Lidar altitude processing.
-
-        필터를 최소화:
-        1. non-finite 값 제거
-        2. 물리적으로 말 안 되는 범위만 제거
-        3. 정상값이면 바로 altitude로 사용
-
-        jump filter / median / EMA 제거.
-        """
-
         if not math.isfinite(raw_altitude):
             self._lidar_reject_count += 1
 
@@ -822,7 +1029,6 @@ class MarkerRecognition(Node):
 
             return float("nan")
 
-        # 물리적으로 말 안 되는 값만 제거
         if raw_altitude < -0.5 or raw_altitude > 40.0:
             self._lidar_reject_count += 1
 
@@ -835,7 +1041,6 @@ class MarkerRecognition(Node):
 
             return float("nan")
 
-        # 정상값이면 바로 반영
         self._lidar_reject_count = 0
         self._filtered_altitude = raw_altitude
 
@@ -923,23 +1128,54 @@ class MarkerRecognition(Node):
                     "changed until node restart"
                 )
 
+            elif param.name == "target_predict_timeout":
+                value = float(param.value)
+
+                if value < 0.0 or value > 30.0:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="target_predict_timeout must be between 0.0 and 30.0 s"
+                    )
+
+                self._target_predict_timeout = value
+                self.get_logger().info(
+                    f"[PARAM] target_predict_timeout updated: "
+                    f"{self._target_predict_timeout:.1f} s"
+                )
+
+            elif param.name == "target_kf_process_var":
+                value = float(param.value)
+
+                if value <= 0.0 or value > 1.0:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="target_kf_process_var must be in (0.0, 1.0]"
+                    )
+
+                self._target_kf_process_var = value
+                self._recreate_target_kf()
+
+            elif param.name == "target_kf_measurement_var":
+                value = float(param.value)
+
+                if value <= 0.0 or value > 10.0:
+                    return SetParametersResult(
+                        successful=False,
+                        reason="target_kf_measurement_var must be in (0.0, 10.0]"
+                    )
+
+                self._target_kf_measurement_var = value
+                self._recreate_target_kf()
+
         return SetParametersResult(successful=True)
-    
+
     def _apply_gamma(self, gray: np.ndarray, gamma: float = 1.5) -> np.ndarray:
-        """
-        Apply gamma correction to a grayscale image.
-
-        gamma > 1.0 : darken bright regions
-        gamma < 1.0 : brighten dark regions
-        """
-
         table = np.array([
             ((i / 255.0) ** gamma) * 255.0
             for i in range(256)
         ]).astype("uint8")
 
         return cv2.LUT(gray, table)
-
 
     def _detect_aruco_from_gray(self, gray: np.ndarray):
         camera_matrix, dist_coeffs = self._get_current_camera_calibration()
@@ -951,8 +1187,8 @@ class MarkerRecognition(Node):
             cameraMatrix=camera_matrix,
             distCoeff=dist_coeffs,
         )
-        return corners, ids, rejected
 
+        return corners, ids, rejected
 
     def _select_largest_marker_center(self, corners, ids) -> Optional[Tuple[float, float]]:
         if ids is None or len(ids) == 0:
@@ -975,19 +1211,12 @@ class MarkerRecognition(Node):
 
         return cx, cy
 
-    
     def _get_current_camera_calibration(self):
-        """
-        Select camera calibration based on current zoom factor.
-
-        1x zoom uses 1x calibration.
-        4x zoom uses 4x calibration.
-        """
-
         if abs(self._current_zoom_factor - 4.0) < 0.2:
             return self._camera_matrix_4x, self._dist_coeffs_4x
 
         return self._camera_matrix_1x, self._dist_coeffs_1x
+
 
 def main(args=None):
     rclpy.init(args=args)
